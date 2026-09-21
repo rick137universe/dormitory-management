@@ -7,6 +7,13 @@ import s from './RolePortal.module.css';
 interface Props {
   moduleId: ModuleId;
   role: RoleId;
+  context?: {
+    featureId: string;
+    title: string;
+    eyebrow: string;
+    description: string;
+    actionLabel: string;
+  };
   onBack: () => void;
   onAction: (message: string) => void;
 }
@@ -19,7 +26,27 @@ interface PageConfig {
   rows: string[][];
 }
 
-function modulePage(moduleId: ModuleId, role: RoleId): PageConfig {
+function modulePage(moduleId: ModuleId, role: RoleId, featureId?: string): PageConfig {
+  if (featureId === 'announcements') return {
+    caption: '查看公寓通知、缴费提醒和安全公告。', primary: '标记全部已读',
+    stats: [['未读公告', '2', '含 1 条缴费提醒'], ['本月发布', '8', '公寓通知 5 条'], ['阅读完成率', '96%', '较上月 +3%']],
+    columns: ['公告标题', '发布部门', '发布时间', '状态'], rows: [['国庆假期宿舍安全提醒', '学生公寓中心', '09.20 16:30', '未读'], ['9 月水电费缴费通知', '财务服务中心', '09.19 09:00', '未读'], ['公共洗衣区设备维护完成', '南苑 3 栋', '09.18 18:10', '已读']],
+  };
+  if (featureId === 'records') return {
+    caption: '查看本人维修记录、处理时长和服务评价。', primary: '导出维修记录',
+    stats: [['本月完成', '53', '按时完成 50 单'], ['平均耗时', '4.2h', '较上月 -0.6h'], ['服务评分', '4.9', '41 次评价']],
+    columns: ['工单编号', '处理项目', '完成时间', '评价'], rows: [['BX-0916', '书桌灯管更换', '09.16 14:20', '五星'], ['BX-0914', '卫生间排水疏通', '09.14 11:05', '五星'], ['BX-0911', '空调外机检修', '09.11 17:42', '四星']],
+  };
+  if (featureId === 'permissions') return {
+    caption: '管理四类角色的账号、菜单权限和数据范围。', primary: '新增角色规则',
+    stats: [['角色数量', '4', '权限边界清晰'], ['系统账号', '7,044', '今日新增 12'], ['异常授权', '0', '近 30 天']],
+    columns: ['角色', '账号数量', '数据范围', '状态'], rows: [['学生', '6,824', '仅本人业务', '启用'], ['宿管人员', '36', '负责楼栋', '启用'], ['维修人员', '28', '获派工单', '启用'], ['系统管理员', '4', '全局数据', '启用']],
+  };
+  if (featureId === 'backup') return {
+    caption: '管理数据库备份计划、恢复点和运行状态。', primary: '立即创建备份',
+    stats: [['最近备份', '成功', '今天 02:18'], ['备份容量', '18.4 GB', '保留 30 天'], ['可用恢复点', '30', '每日 1 个']],
+    columns: ['备份编号', '数据范围', '完成时间', '状态'], rows: [['BK-0921', '全量数据库', '今天 02:18', '成功'], ['BK-0920', '全量数据库', '昨天 02:16', '成功'], ['BK-0919', '全量数据库', '09.19 02:17', '成功']],
+  };
   if (moduleId === 'personal') return {
     caption: '管理个人资料、安全设置、消息通知和当前待办。', primary: '编辑个人资料',
     stats: [['未读消息', '3', '1 条业务提醒'], ['待办事项', '4', '今天新增 2 项'], ['账号安全', '正常', '上次登录 14:20']],
@@ -71,17 +98,20 @@ function modulePage(moduleId: ModuleId, role: RoleId): PageConfig {
   };
 }
 
-export function ModulePage({ moduleId, role, onBack, onAction }: Props) {
-  const page = modulePage(moduleId, role);
+export function ModulePage({ moduleId, role, context, onBack, onAction }: Props) {
+  const page = modulePage(moduleId, role, context?.featureId);
+  const displayTitle = context?.title ?? moduleCatalog[moduleId].name;
+  const displayCaption = context?.description ?? page.caption;
+  const primaryAction = context?.actionLabel ?? page.primary;
   return <div className={s.modulePage}>
-    <div className={s.breadcrumb}><button onClick={onBack}><ArrowLeft size={13} />工作台概览</button><span>/</span><strong>{moduleCatalog[moduleId].name}</strong></div>
+    <div className={s.breadcrumb}><button onClick={onBack}><ArrowLeft size={13} />返回上一页</button><span>/</span><strong>{displayTitle}</strong></div>
     <section className={s.moduleHero}>
-      <div><p>{moduleCatalog[moduleId].index} / AUTHORIZED MODULE</p><h3>{moduleCatalog[moduleId].name}</h3><span>{page.caption}</span></div>
-      <button onClick={() => onAction(`${page.primary}（演示操作）`)}><Plus size={15} />{page.primary}</button>
+      <div><p>{context?.eyebrow ?? moduleCatalog[moduleId].index + ' / AUTHORIZED MODULE'}</p><h3>{displayTitle}</h3><span>{displayCaption}</span></div>
+      <button onClick={() => onAction(primaryAction + '（演示操作）')}><Plus size={15} />{primaryAction}</button>
     </section>
     <section className={s.moduleStats}>{page.stats.map(([label, value, note]) => <article key={label}><span>{label}</span><strong>{value}</strong><small><CheckCircle2 size={11} />{note}</small></article>)}</section>
     <section className={s.dataPanel}>
-      <header><div><small>BUSINESS DATA</small><h3>{moduleCatalog[moduleId].name}数据</h3></div><div className={s.dataTools}><label><Search size={14} /><input aria-label={`搜索${moduleCatalog[moduleId].name}`} placeholder="输入关键词搜索" /></label><button onClick={() => onAction('筛选条件已展开')}><Filter size={14} />筛选</button></div></header>
+      <header><div><small>BUSINESS DATA</small><h3>{displayTitle}数据</h3></div><div className={s.dataTools}><label><Search size={14} /><input aria-label={'搜索' + displayTitle} placeholder="输入关键词搜索" /></label><button onClick={() => onAction(displayTitle + '筛选条件')}><Filter size={14} />筛选</button></div></header>
       <div className={s.tableWrap}><table><thead><tr>{page.columns.map(column => <th key={column}>{column}</th>)}<th>操作</th></tr></thead><tbody>{page.rows.map(row => <tr key={row[0]}>{row.map((cell, cellIndex) => <td key={page.columns[cellIndex]}>{cellIndex === row.length - 1 ? <span data-state={cell}>{cell}</span> : cell}</td>)}<td><button onClick={() => onAction(`已打开 ${row[0]} 的业务详情`)}>查看 <ArrowRight size={12} /></button></td></tr>)}</tbody></table></div>
     </section>
   </div>;
