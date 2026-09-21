@@ -12,6 +12,7 @@ import {
   demoAccounts, moduleCatalog, roleWorkspace,
   type DemoAccount, type ModuleId,
 } from '@/lib/role-workspaces';
+import { ModulePage } from './ModulePage';
 import s from './RolePortal.module.css';
 
 interface Props { open: boolean; onClose: () => void; }
@@ -40,7 +41,7 @@ export function RolePortal({ open, onClose }: Props) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [activeModule, setActiveModule] = useState<ModuleId>('personal');
+  const [activeView, setActiveView] = useState<'overview' | ModuleId>('overview');
   const [toast, setToast] = useState('');
 
   useEffect(() => {
@@ -64,7 +65,7 @@ export function RolePortal({ open, onClose }: Props) {
       return;
     }
     setAccount(match);
-    setActiveModule(roleWorkspace[match.role].modules[0]);
+    setActiveView('overview');
     setError('');
     setToast('');
   }
@@ -129,18 +130,18 @@ export function RolePortal({ open, onClose }: Props) {
       ) : workspace && (
         <div className={s.workspaceShell}>
           <aside className={s.sidebar}>
-            <button className={s.workspaceLogo} onClick={() => setActiveModule(workspace.modules[0])}>dorma<span>●</span></button>
+            <button className={s.workspaceLogo} onClick={() => setActiveView('overview')}>dorma<span>●</span></button>
             <div className={s.identity}>
               <span>{account.displayName.slice(0, 1)}</span>
               <div><strong>{account.displayName}</strong><small>{account.roleName}</small></div>
             </div>
             <nav aria-label={`${account.roleName}功能导航`}>
               <p>工作台</p>
-              <button data-active={activeModule === workspace.modules[0]} onClick={() => setActiveModule(workspace.modules[0])}><LayoutDashboard size={17} />概览</button>
+              <button data-active={activeView === 'overview'} onClick={() => setActiveView('overview')}><LayoutDashboard size={17} />概览</button>
               <p>功能模块</p>
               {workspace.modules.map(moduleId => {
                 const Icon = moduleIcons[moduleId];
-                return <button key={moduleId} data-active={activeModule === moduleId} onClick={() => setActiveModule(moduleId)}><Icon size={17} />{moduleCatalog[moduleId].name}<span>{moduleCatalog[moduleId].index}</span></button>;
+                return <button key={moduleId} data-active={activeView === moduleId} onClick={() => setActiveView(moduleId)}><Icon size={17} />{moduleCatalog[moduleId].name}<span>{moduleCatalog[moduleId].index}</span></button>;
               })}
             </nav>
             <div className={s.scope}><ShieldCheck size={15} /><p><strong>当前权限范围</strong>{account.scope}</p></div>
@@ -148,13 +149,14 @@ export function RolePortal({ open, onClose }: Props) {
           </aside>
           <main className={s.workspaceMain}>
             <header className={s.workspaceHeader}>
-              <div><p>DORMA / {account.role.toUpperCase()}</p><h2 id="portal-title">{moduleCatalog[activeModule].name}</h2></div>
+              <div><p>DORMA / {account.role.toUpperCase()}</p><h2 id="portal-title">{activeView === 'overview' ? '工作台概览' : moduleCatalog[activeView].name}</h2></div>
               <div className={s.headerTools}><label><Search size={15} /><input aria-label="搜索" placeholder="搜索业务、工单或学生" /></label><button aria-label="消息通知"><Bell size={18} /><i /></button><button onClick={() => dialog.current?.close()} aria-label="关闭工作台"><X size={19} /></button></div>
             </header>
             <div className={s.workspaceContent}>
+              {activeView === 'overview' ? <>
               <section className={s.welcome}>
                 <div><p>{workspace.greeting}</p><h3>{workspace.caption}</h3></div>
-                <button onClick={() => action(`${moduleCatalog[activeModule].name}功能已打开（演示数据）`)}>处理当前业务 <ArrowRight size={16} /></button>
+                <button onClick={() => action('已打开当前待办队列（演示数据）')}>处理当前业务 <ArrowRight size={16} /></button>
               </section>
               <section className={s.metrics} aria-label="关键指标">
                 {workspace.metrics.map(metric => <article key={metric.label} data-tone={metric.tone}><span>{metric.label}</span><strong>{metric.value}</strong><p>{metric.note}</p><i /></article>)}
@@ -170,10 +172,7 @@ export function RolePortal({ open, onClose }: Props) {
                   <button onClick={() => action(`正在查看${workspace.focusTitle}完整数据`)}>查看完整数据 <ArrowRight size={14} /></button>
                 </section>
               </div>
-              <section className={s.moduleStrip}>
-                <div><small>AUTHORIZED MODULES</small><h3>{account.roleName}可用功能</h3></div>
-                <div>{workspace.modules.map(moduleId => { const Icon = moduleIcons[moduleId]; return <button key={moduleId} onClick={() => setActiveModule(moduleId)} data-active={activeModule === moduleId}><span><Icon size={17} /></span><strong>{moduleCatalog[moduleId].name}</strong><small>{moduleCatalog[moduleId].short}</small></button>; })}</div>
-              </section>
+              </> : <ModulePage moduleId={activeView} role={account.role} onBack={() => setActiveView('overview')} onAction={action} />}
             </div>
             {toast && <p className={s.toast} role="status"><Check size={15} />{toast}</p>}
           </main>

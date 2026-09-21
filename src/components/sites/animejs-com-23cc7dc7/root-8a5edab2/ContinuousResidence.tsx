@@ -24,7 +24,7 @@ export function ContinuousResidence({ progress, paused, onSelect }: Props) {
       element.appendChild(renderer.domElement);
       cleanup=()=>{renderer.setAnimationLoop(null);renderer.dispose();renderer.domElement.remove();};
       const scene=new T.Scene();const background=new T.Color(0x252423);scene.background=background;
-      const camera=new T.OrthographicCamera(-10,10,8,-8,.1,120);camera.position.set(0,6.4,23);camera.lookAt(0,0,0);
+      const camera=new T.OrthographicCamera(-10,10,8,-8,.1,120);camera.position.set(0,4.2,25);camera.lookAt(0,-.45,0);
       const ambient=new T.HemisphereLight(0xf7eddb,0x4c5954,2.5);scene.add(ambient);
       const key=new T.DirectionalLight(0xffe6c7,3.6);key.position.set(-8,14,12);key.castShadow=true;key.shadow.mapSize.set(1024,1024);key.shadow.camera.left=-12;key.shadow.camera.right=12;key.shadow.camera.top=14;key.shadow.camera.bottom=-12;key.shadow.bias=-.001;scene.add(key);
       const rim=new T.DirectionalLight(0xb8d5df,2.0);rim.position.set(10,4,-8);scene.add(rim);
@@ -33,16 +33,16 @@ export function ContinuousResidence({ progress, paused, onSelect }: Props) {
       for(let i=-8;i<=8;i++){gridPoints.push(-8,-4.55,i,8,-4.55,i,i,-4.55,-8,i,-4.55,8);}gridGeometry.setAttribute('position',new T.Float32BufferAttribute(gridPoints,3));
       const gridMaterial=new T.LineBasicMaterial({color:0x908b79,transparent:true,opacity:.1});const grid=new T.LineSegments(gridGeometry,gridMaterial);scene.add(grid);
       const dark=new T.Color(0x252423),cream=new T.Color(0xdedbd5),edgeDark=new T.Color(0x727165),edgeLight=new T.Color(0x585750);
-      const state={yaw:-.68,tilt:0,spread:0,shell:0,light:0,wire:0,zoom:.90,lift:0};
+      const state={yaw:0,tilt:0,spread:0,shell:0,light:0,wire:0,zoom:.90,lift:0};
       const keys=[
-        {at:0,yaw:-.68,tilt:0,spread:0,shell:0,light:0,wire:0,zoom:1.0,lift:0},
-        {at:.12,yaw:-.1,tilt:.025,spread:0,shell:0,light:0,wire:0,zoom:.91,lift:0},
-        {at:.27,yaw:.7,tilt:-.04,spread:.16,shell:.5,light:.85,wire:0,zoom:.78,lift:0},
-        {at:.41,yaw:1.22,tilt:-.02,spread:.27,shell:1,light:1,wire:.12,zoom:.74,lift:0},
-        {at:.55,yaw:2.42,tilt:.03,spread:.36,shell:.78,light:0,wire:0,zoom:.74,lift:0},
-        {at:.72,yaw:3.62,tilt:-.04,spread:.45,shell:.86,light:0,wire:.08,zoom:.72,lift:0},
-        {at:.88,yaw:4.65,tilt:0,spread:.86,shell:1,light:1,wire:.95,zoom:.57,lift:0},
-        {at:1,yaw:5.0,tilt:0,spread:1,shell:1,light:1,wire:1,zoom:.50,lift:0},
+        {at:0,yaw:0,tilt:0,spread:0,shell:0,light:0,wire:0,zoom:1.0,lift:0},
+        {at:.12,yaw:.14,tilt:0,spread:0,shell:0,light:0,wire:0,zoom:.91,lift:0},
+        {at:.27,yaw:-.16,tilt:0,spread:.16,shell:.5,light:.85,wire:0,zoom:.78,lift:0},
+        {at:.41,yaw:.12,tilt:0,spread:.27,shell:1,light:1,wire:.12,zoom:.74,lift:0},
+        {at:.55,yaw:-.18,tilt:0,spread:.36,shell:.78,light:0,wire:0,zoom:.74,lift:0},
+        {at:.72,yaw:.16,tilt:0,spread:.45,shell:.86,light:0,wire:.08,zoom:.72,lift:0},
+        {at:.88,yaw:-.08,tilt:0,spread:.86,shell:1,light:1,wire:.95,zoom:.57,lift:0},
+        {at:1,yaw:0,tilt:0,spread:1,shell:1,light:1,wire:1,zoom:.50,lift:0},
       ];
       const timeline=createTimeline({autoplay:false});
       keys.slice(1).forEach((k,i)=>{timeline.add(state,{yaw:k.yaw,tilt:k.tilt,spread:k.spread,shell:k.shell,light:k.light,wire:k.wire,zoom:k.zoom,duration:(k.at-keys[i].at)*10000,ease:'inOutSine'},keys[i].at*10000);});
