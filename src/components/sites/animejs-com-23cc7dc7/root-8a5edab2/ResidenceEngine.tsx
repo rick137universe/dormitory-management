@@ -7,6 +7,7 @@ type ResidenceEngineProps = {
   progress?: number;
   mode?: number;
   compact?: boolean;
+  onSelect?: (floor: number) => void;
 };
 
 const tiers = [
@@ -15,14 +16,14 @@ const tiers = [
   { color: "#b5a1ff", label: "03 / FLOW", y: 366 },
 ];
 
-export function ResidenceEngine({ progress = 0, mode, compact = false }: ResidenceEngineProps) {
+export function ResidenceEngine({ progress = 0, mode, compact = false, onSelect }: ResidenceEngineProps) {
   const id = useId().replace(/:/g, "");
   const p = Math.max(0, Math.min(1, progress));
   const labelOpacity = Math.max(0, Math.min(1, (p - 0.3) / 0.35));
   const ringOpacity = 0.8 - p * 0.55;
 
   return (
-    <svg className={`${styles.engine} ${compact ? styles.compact : ""}`} viewBox="0 0 640 640" role="img" aria-label="可随滚动展开的三层公寓：住宿、维修与缴费服务">
+    <svg className={`${styles.engine} ${compact ? styles.compact : ""}`} viewBox="0 0 640 640" role={onSelect ? "group" : "img"} aria-label="可随滚动展开的三层公寓：住宿、维修与缴费服务">
       <defs>
         <radialGradient id={`${id}-halo`}>
           <stop offset="0" stopColor="#d1ed83" stopOpacity=".08" />
@@ -64,7 +65,7 @@ export function ResidenceEngine({ progress = 0, mode, compact = false }: Residen
         const dx = (index - 1) * 20 * p;
         const dy = (index - 1) * 100 * p;
         return (
-          <g key={label} transform={`translate(${dx} ${dy})`} opacity={mode === undefined || mode === index || p < 0.3 ? 1 : 0.64}>
+          <g key={label} className={onSelect ? styles.selectableFloor : undefined} role={onSelect ? 'button' : undefined} tabIndex={onSelect ? 0 : undefined} aria-label={onSelect ? ['查看住宿信息', '打开维修服务', '查看费用账单'][index] : undefined} onClick={onSelect ? () => onSelect(index) : undefined} onKeyDown={onSelect ? e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(index); } } : undefined} transform={`translate(${dx} ${dy})`} opacity={mode === undefined || mode === index || p < 0.3 ? 1 : 0.64}>
             <path d={`M184 ${y + 50} L320 ${y + 104} L456 ${y + 50} L456 ${y - 20} L320 ${y - 74} L184 ${y - 20} Z`} fill="#252423" />
             <path d={`M184 ${y - 20} L320 ${y + 34} L320 ${y + 104} L184 ${y + 50} Z`} fill={`url(#${id}-face-${index})`} stroke={color} strokeWidth="1.15" />
             <path d={`M320 ${y + 34} L456 ${y - 20} L456 ${y + 50} L320 ${y + 104} Z`} fill={`url(#${id}-face-${index})`} stroke={color} strokeWidth="1.15" />
