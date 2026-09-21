@@ -1,0 +1,28 @@
+.engine {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.rotationGroup {
+  transform-origin: 320px 320px;
+  transform-box: view-box;
+}
+
+.floorLabel {
+  font-family: inherit;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+}
+
+.annotation {
+  font-family: inherit;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+}
+
+.compact {
+  max-width: 640px;
+  margin-inline: auto;
+}
