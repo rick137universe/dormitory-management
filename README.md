@@ -1,10 +1,10 @@
-# Dorma 校园公寓服务首页
+# Dorma 连续三维公寓首页
 
-独立项目：D:/03_Workspace/dormitory-management。使用 ai-website-cloner 技能和模板启动；原模板的页面代码未修改。
+独立项目：D:/03_Workspace/dormitory-management。原 ai-website-cloner 模板代码未修改。
 
-## 本地运行
+## 启动
 
-需要 Node.js 24 或以上。
+Node.js 24 或以上。
 
 ```powershell
 cd D:\03_Workspace\dormitory-management
@@ -12,32 +12,39 @@ npm install
 npm run dev -- --port 3100
 ```
 
-打开 http://localhost:3100 。质量检查：`npm run check`。
+访问 http://localhost:3100 。检查命令：`npm run check`。
 
-## 已实现
+## 当前版本
 
-- Anime.js 官网风格的暖黑首页、彩色建筑轮廓、环绕轨道与窗户动效。
-- 向下滚动，公寓逐层展开；住宿 / 维修 / 账单入口依次高亮。楼层本身与文字入口均可点击。
-- 住宿详情、模拟报修提交与记录更新、账单展示、两条公告。
-- 手机导航、弹窗键盘操作、动画暂停及系统减少动态效果设置。
+全页一个持久 WebGL 画布、一个公寓模型。Next.js 16 / React 19 / TypeScript / Three.js / Anime.js。
 
-使用 Next.js 16 / React 19 / TypeScript / Anime.js 4。公寓为可分层的 SVG 等距视角图形，不是真实 WebGL 三维模型。模拟报修仅保留在本次页面会话，刷新即重置；没有登录、支付或后端接入。
+原先的两组 SVG 模型已从页面移除。滚动推动同一条 Anime.js 时间轴，连续控制模型旋转、25 个部件的展开、镜头缩放、背景颜色和线稿材质：
 
-## 源码
+1. 完整五层公寓，显示阳台、玻璃窗、窗框、屋顶光伏和水箱。
+2. 公寓转向，外墙开始分离。
+3. 浅色住宿场景，露出房间、床铺、书桌和柜子。
+4. 维修场景，突出空调与水管系统。
+5. 账单场景，突出电表与配电线路。
+6. 浅色建筑线稿全貌，楼板、外墙、屋顶、服务设备完整展开。
 
-- `src/components/sites/animejs-com-23cc7dc7/root-8a5edab2/HomePage.tsx`：首页、滚动进度与弹窗。
-- `ResidenceEngine.tsx`：分层公寓 SVG。
-- `ServiceSection.tsx`：服务与公告区域。
-- `src/lib/mock-campus.ts`：模拟数据，后续可由接口层替换。
-- `docs/research/`：参考提取、输出计划、三份组件规格。
-- `docs/design-references/` 与 `docs/qa/`：参考图及本地验证截图。
+向上滚动可逆向组装。顶部及底部导航沿相同时间轴转场；进度条可拖动。点击模型能进入其所属功能，文字按钮提供键盘等价入口。
 
-## 参考和范围
+住宿详情、模拟报修提交与记录更新、账单和公告保留。数据仅在当前页面会话保存，刷新重置，没有真实后端、身份认证或支付。
 
-参考 https://animejs.com/ 首页，目标路由 `/`。保留深色调、大标题、环形动效、滚动叙事；按用户要求改为公寓主题、中文文案及楼层拆解，因此不是 Anime.js 官网的逐像素复制。未复制官网三维引擎模型。字体 DINish 从目标网站加载并保存于 `public/sites/animejs-com-23cc7dc7/shared/dinish.woff2`，中文使用系统字体；图形由 SVG 实现。
+## 代码入口
 
-共三项主体组件（首页、分层公寓、服务区），三份规格；页面包含导航、首屏、滚动拆解、服务、公告和页脚。下载一份字体，无图片或视频依赖。
+- `src/components/sites/animejs-com-23cc7dc7/root-8a5edab2/HomePage.tsx`：滚动叙事、业务弹窗。
+- `ContinuousResidence.tsx`：唯一 WebGL 场景、Anime.js 时间轴、点击拾取和资源释放。
+- `residence-model.ts`：程序化三维建筑、25 个可拆部件、合并几何体。
+- `Narrative.module.css`：固定场景上的文字、导航和移动布局。
+- `src/lib/mock-campus.ts`：模拟业务数据。
 
-## 验证
+## 参考与范围
 
-已完成 1440px 桌面、768px 平板、390px 手机检查，手机/平板无横向溢出。报修提交、账单弹窗、手机菜单、Escape 关闭通过；浏览器未捕获运行错误。减少动态效果时停止循环动画并静态展开。检查记录见 `docs/qa/results.json`。
+参考 https://animejs.com/ 的单模型滚动叙事、拆解旋转和浅色线稿过渡。公寓为原创程序化几何模型，不是官网下载的机械引擎模型，也不声称逐像素还原。源站字体 DINish 延用前版本地资产；无新增远程图片、模型或纹理依赖。
+
+研究与分镜位于 `docs/research/animejs-com-23cc7dc7/root-8a5edab2/revision-2/`。桌面与手机截图、交互检查在 `docs/qa/revision-2/`。旧版截图仅作历史记录。
+
+## 验证范围
+
+检查唯一 canvas 跨章节保持同一 DOM 实例，25 个部件；桌面六场景无运行异常。报修提交、账单、住宿、手机菜单、Escape 和减少动态效果测试通过。模型使用合并几何体，当前约 298 次渲染调用（包含轮廓与地网格），并限制渲染像素比。尚未在实体低端手机上测量性能；不支持 WebGL 的浏览器会保留文字功能入口并显示提示。

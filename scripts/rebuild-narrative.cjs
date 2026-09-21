@@ -1,6 +1,7 @@
-'use client';
+const fs=require('fs');const file='src/components/sites/animejs-com-23cc7dc7/root-8a5edab2/HomePage.tsx';const old=fs.readFileSync(file,'utf8');const dialogs=old.slice(old.indexOf('    <dialog ref='),old.lastIndexOf('  </div>;'));
+const top=`'use client';
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
-import { ArrowDown, ArrowRight, ArrowUpRight, Check, CircleHelp, Menu, Pause, Play, X } from 'lucide-react';
+import { ArrowDown, ArrowRight, ArrowUpRight, Check, CircleHelp, Menu, Pause, Play, Plus, X } from 'lucide-react';
 import { ContinuousResidence } from './ContinuousResidence';
 import { bill, initialRepairs, student, type RepairRecord, type Service } from '@/lib/mock-campus';
 import s from './HomePage.module.css';
@@ -60,26 +61,5 @@ export function HomePage() {
       </div>
     </div>
     <footer className={n.footer}><span>DORMA © 2026 <b>学生公寓生活服务</b></span><nav aria-label="章节导航">{chapters.map((c,i)=><button key={c.name} aria-current={i===stage?'step':undefined} aria-label={'跳转到'+c.name} onClick={()=>seek(c.at)}><span>0{i+1}</span>{c.name}</button>)}</nav><small>交互演示 · 模拟数据</small></footer>
-    <dialog ref={dialog} className={s.dialog} aria-labelledby="service-dialog-title" onClick={event => { if (event.target === event.currentTarget) close(); }}>
-      <div className={s.dialogInner}>
-        <div className={s.dialogHeader}><div><p className={s.eyebrow}>DORMA / STUDENT SERVICES</p><h2 id="service-dialog-title">{title[active]}</h2></div><button className={s.close} onClick={close} aria-label="关闭弹窗"><X size={22}/></button></div>
-        <p className={s.demoNote}><CircleHelp size={14}/> 交互演示 · 使用模拟数据，不会产生真实业务</p>
-        {(active === 'room' || active === 'profile') && <>
-          <div className={s.roomSummary}><span>YOUR LITTLE WORLD</span><strong>502<span>室</span></strong><p>{student.building} / {student.bed} 号床位</p><em><i/> 已入住</em></div>
-          <dl className={s.details}><div><dt>入住人</dt><dd>{student.name}</dd></div><div><dt>住宿学年</dt><dd>{student.term}</dd></div><div><dt>所在园区</dt><dd>{student.campus}</dd></div><div><dt>房间类型</dt><dd>四人间 · 独立卫浴</dd></div></dl>
-          <div className={s.dialogActions}><button className={s.primary} onClick={() => open('repair')}>报修宿舍设施 <ArrowRight size={16}/></button><button className={s.secondary} onClick={() => open('bill')}>查看账单 <ArrowUpRight size={16}/></button></div>
-        </>}
-        {active === 'repair' && <>
-          {submitted ? <div className={s.success} role="status"><span><Check size={32}/></span><h3>报修已提交</h3><p>演示工单已加入下方记录，当前状态为「待审核」。<br/>刷新页面后，模拟数据会重置。</p><button className={s.secondary} onClick={() => setSubmitted(false)}>继续提交</button></div> : <form onSubmit={submitRepair} className={s.form}>
-            <div className={s.formRow}><label>报修位置<input value="南苑 3 栋 · 502 室" readOnly/></label><label>故障类型<select name="category"><option>水电设施</option><option>门窗家具</option><option>空调设备</option><option>其他问题</option></select></label></div>
-            <label>故障描述<textarea name="description" placeholder="例如：卫生间水龙头关闭后仍持续滴水……" required maxLength={300} rows={3} onInput={e => e.currentTarget.setCustomValidity('')}/></label>
-            <button className={s.primary} type="submit" disabled={sending}>{sending ? '正在提交…' : '提交报修'}<ArrowUpRight size={17}/></button>
-          </form>}
-          <div className={s.records}><h3>我的报修记录 <span>{records.length}</span></h3>{records.map(record => <div className={s.record} key={record.id}><div><strong>{record.title}</strong><small>{record.date} · {record.id}</small></div><span data-status={record.status}>{record.status}</span></div>)}</div>
-        </>}
-        {active === 'bill' && <><div className={s.billTotal}><span>{bill.month} · 待缴金额</span><strong><small>¥</small>{bill.total.toFixed(2)}</strong><p>账单数据为演示数据</p></div><dl className={s.details}><div><dt>住宿费用</dt><dd>本学年已缴</dd></div><div><dt>水费</dt><dd>¥{bill.water.toFixed(2)}</dd></div><div><dt>电费</dt><dd>¥{bill.electricity.toFixed(2)}</dd></div><div><dt>合计</dt><dd>¥{bill.total.toFixed(2)}</dd></div></dl><p className={s.noticeText}>当前版本仅展示账单信息，支付功能待后续接入。</p></>}
-        {active.startsWith('notice-') && <article className={s.noticeText}><p className={s.noticeDate}>公寓服务中心 / {active === 'notice-water' ? '2026.09.21' : '2026.09.18'} · 示例公告</p>{active === 'notice-water' ? <><h3>南苑 3 栋供水维护通知</h3><p>为保障日常用水，南苑 3 栋计划于 9 月 23 日 14:00—16:00 进行供水设施维护。期间可能出现短时停水，请同学们提前安排用水。</p><p>维护完成后将恢复供水。如遇持续异常，可通过「维修服务」提交报修。</p></> : <><h3>秋季宿舍用电安全提醒</h3><p>离开宿舍时，请及时关闭不使用的电器。请勿在宿舍内使用大功率违规电器，也不要将插线板放置在床铺等易燃物上。</p><p>发现插座松动、电线破损或异常发热时，请停止使用并联系宿管人员。</p></>}<button className={s.secondary} onClick={close}>我知道了 <Check size={16}/></button></article>}
-      </div>
-    </dialog>
-  </div>;
-}
+`;
+fs.writeFileSync(file,top+dialogs+'  </div>;\n}\n');
