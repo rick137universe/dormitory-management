@@ -17,6 +17,7 @@ import s from './RolePortal.module.css';
 
 interface Props {
   open: boolean;
+  loginOnly?: boolean;
   requestedView: 'overview' | ModuleId;
   onClose: () => void;
   onViewChange: (view: 'overview' | ModuleId) => void;
@@ -49,7 +50,7 @@ function taskDestination(taskId: string): ModuleId {
   return 'accommodation';
 }
 
-export function RolePortal({ open, requestedView, onClose, onViewChange, onSessionChange }: Props) {
+export function RolePortal({ open, loginOnly = false, requestedView, onClose, onViewChange, onSessionChange }: Props) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [account, setAccount] = useState<DemoAccount | null>(null);
   const [username, setUsername] = useState('');
@@ -84,6 +85,7 @@ export function RolePortal({ open, requestedView, onClose, onViewChange, onSessi
     onSessionChange(match);
     setError('');
     setToast('');
+    if (loginOnly) dialog.current?.close();
   }
 
   function logout() {
@@ -107,7 +109,10 @@ export function RolePortal({ open, requestedView, onClose, onViewChange, onSessi
       ref={dialog}
       className={s.portal}
       aria-labelledby="portal-title"
-      onClose={onClose}
+      onClose={() => {
+        if (loginOnly) setAccount(null);
+        onClose();
+      }}
       onClick={event => { if (event.target === event.currentTarget) dialog.current?.close(); }}
     >
       {!account ? (
