@@ -43,6 +43,7 @@ export function createResidenceModel(): ResidenceModel {
   base.finish();
   for(let f=0;f<5;f++){
     const y=-4+f*1.5;const spreadY=(f-2)*1.72;
+    const balconyCenters=f===0?[-2.28,2.28]:[-2.28,0,2.28];
     const rooms=part('room',f,[0,y,0],[(f-2)*.62,spreadY,f%2===0?.5:-.5],[0,(f-2)*.055,0]);
     rooms.box(7,.18,4.8,0,.02,0,'slab');rooms.box(6.7,.05,4.55,0,.14,0,'wood');
     rooms.box(6.65,.04,.85,0,.18,-1.65,'stone');
@@ -58,12 +59,12 @@ export function createResidenceModel(): ResidenceModel {
     rooms.finish();
     const facade=part('shell',f,[0,y,0],[(f-2)*.45,spreadY,4.7],[.015*(f-2),.075*(f-2),0]);
     facade.box(7,.16,.24,0,.06,2.32,'slab');
-    for(const x of [-2.28,0,2.28])facade.box(1.96,.16,.68,x,.08,2.62,'slab');
+    for(const x of balconyCenters)facade.box(1.96,.16,.68,x,.08,2.62,'slab');
     for(const x of [-3.45,-1.13,1.13,3.45])facade.box(.17,1.4,.27,x,.83,2.28,'slab');
     facade.box(7,.21,.3,0,1.36,2.29,'slab');facade.box(7,.13,.28,0,.25,2.3,'stone');
     for(const x of [-2.28,0,2.28]){facade.box(1.93,.93,.06,x,.81,2.29,'glass');facade.box(.045,1.02,.1,x,.81,2.32,'bronze');facade.box(2.0,.04,.1,x,.83,2.32,'bronze');facade.box(1.85,.035,.04,x,1.29,2.36,'warm');}
     if(f===0){facade.box(1.62,1.26,.12,0,.67,2.43,'slab');facade.box(.68,1.12,.045,-.36,.66,2.51,'glass');facade.box(.68,1.12,.045,.36,.66,2.51,'glass');facade.box(.055,1.17,.055,0,.67,2.55,'bronze');facade.box(.055,.34,.055,-.08,.67,2.57,'bronze');facade.box(.055,.34,.055,.08,.67,2.57,'bronze');facade.box(2.15,.12,.82,0,1.39,2.68,'slab');facade.box(1.85,.05,.68,0,1.31,2.71,'warm');}
-    for(const x of [-2.28,0,2.28]){
+    for(const x of balconyCenters){
       facade.box(1.82,.035,.035,x,.93,2.96,'bronze');facade.box(1.82,.025,.025,x,.45,2.96,'bronze');
       for(let dx=-.88;dx<=.88;dx+=.22)facade.box(.022,.62,.025,x+dx,.64,2.96,'bronze');
       for(const edge of [-.96,.96]){
@@ -93,9 +94,9 @@ export function createResidenceModel(): ResidenceModel {
   const repair=part('repair',2,[3.62,0,0],[6.35,.25,-1.55],[0,.22,0]);
   for(const z of [1.62,1.9])repair.cylinder(.055,7.4,0,-.2,z,'copper');
   for(let f=0;f<5;f++){const y=-3.5+f*1.5;repair.cylinder(.04,.52,.22,y+.05,1.62,'copper',0,Math.PI/2);repair.box(.42,.48,.86,.28,y+.25,1.25,'slab');for(let i=0;i<7;i++)repair.box(.045,.025,.68,.5,y+.08+i*.05,1.25,'bronze');repair.cylinder(.14,.05,.51,y+.24,1.25,'bronze',0,Math.PI/2);repair.cylinder(.045,.05,.56,y+.24,1.25,'copper',0,Math.PI/2);repair.box(.05,.13,.38,.18,y,1.43,'copper');}repair.finish();
-  const electric=part('bill',2,[-3.58,0,-.9],[-6.45,-.25,1.35],[0,-.22,0]);
-  electric.box(.07,7.6,.09,0,-.1,0,'violet');electric.box(.07,7.6,.09,0,-.1,.3,'bronze');
-  for(let f=0;f<5;f++){const y=-3.45+f*1.5;electric.box(.3,.53,.6,-.1,y,.9,'bronze');electric.box(.04,.19,.36,-.27,y+.06,.9,'glass');electric.box(.045,.04,.1,-.3,y+.06,.9,'warm');for(const z of [.74,.9,1.06])electric.box(.06,.05,.05,-.29,y-.14,z,'violet');electric.box(.09,.06,1.02,0,y,.48,'violet');}electric.finish();
+  const electric=part('bill',2,[-3.62,0,0],[-6.45,-.25,1.35],[0,-.22,0]);
+  electric.box(.07,7.6,.09,0,-.1,1.62,'violet');electric.box(.07,7.6,.09,0,-.1,1.9,'bronze');
+  for(let f=0;f<5;f++){const y=-3.45+f*1.5;electric.box(.42,.53,.7,-.28,y+.2,1.25,'bronze');electric.box(.04,.19,.4,-.51,y+.25,1.25,'glass');electric.box(.045,.04,.1,-.54,y+.25,1.25,'warm');for(const z of [1.08,1.25,1.42])electric.box(.06,.05,.05,-.53,y+.02,z,'violet');electric.box(.09,.06,.5,-.05,y+.05,1.48,'violet');}electric.finish();
   root.updateMatrixWorld(true);
   return {root,parts,surfaceMaterials,edgeMaterials,dispose:()=>{allGeometries.forEach(g=>g.dispose());surfaceMaterials.forEach(m=>m.dispose());edgeMaterials.forEach(m=>m.dispose());}};
 }

@@ -24,7 +24,7 @@ export function ContinuousResidence({ progress, paused, onSelect }: Props) {
       element.appendChild(renderer.domElement);
       cleanup=()=>{renderer.setAnimationLoop(null);renderer.dispose();renderer.domElement.remove();};
       const scene=new T.Scene();const background=new T.Color(0x252423);scene.background=background;
-      const camera=new T.OrthographicCamera(-10,10,8,-8,.1,120);camera.position.set(0,4.2,25);camera.lookAt(0,-.45,0);
+      const camera=new T.OrthographicCamera(-10,10,8,-8,.1,120);camera.position.set(0,0,25);camera.lookAt(0,0,0);
       const ambient=new T.HemisphereLight(0xf7eddb,0x4c5954,2.5);scene.add(ambient);
       const key=new T.DirectionalLight(0xffe6c7,3.6);key.position.set(-8,14,12);key.castShadow=true;key.shadow.mapSize.set(1024,1024);key.shadow.camera.left=-12;key.shadow.camera.right=12;key.shadow.camera.top=14;key.shadow.camera.bottom=-12;key.shadow.bias=-.001;scene.add(key);
       const rim=new T.DirectionalLight(0xb8d5df,2.0);rim.position.set(10,4,-8);scene.add(rim);
@@ -47,7 +47,7 @@ export function ContinuousResidence({ progress, paused, onSelect }: Props) {
       const timeline=createTimeline({autoplay:false});
       keys.slice(1).forEach((k,i)=>{timeline.add(state,{yaw:k.yaw,tilt:k.tilt,spread:k.spread,shell:k.shell,light:k.light,wire:k.wire,zoom:k.zoom,duration:(k.at-keys[i].at)*10000,ease:'inOutSine'},keys[i].at*10000);});
       const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
-      let displayed=latest.current.progress;let last=0;let idle=0;let mobile=false;let width=1;let height=1;
+      let displayed=latest.current.progress;let last=0;let mobile=false;let width=1;let height=1;
       function resize(){width=element!.clientWidth;height=element!.clientHeight;mobile=width<1100;const aspect=width/height;const vertical=mobile?18.8:13.2;camera.left=-vertical*aspect/2;camera.right=vertical*aspect/2;camera.top=vertical/2;camera.bottom=-vertical/2;camera.updateProjectionMatrix();renderer.setSize(width,height);renderer.setPixelRatio(Math.min(window.devicePixelRatio,mobile?1.45:1.7));}
       const observer=new ResizeObserver(resize);observer.observe(element);resize();
       const raycaster=new T.Raycaster();const pointer=new T.Vector2();let downX=0,downY=0;
@@ -59,9 +59,9 @@ export function ContinuousResidence({ progress, paused, onSelect }: Props) {
         if(document.hidden)return;
         const delta=Math.min(.05,(time-last)/1000||.016);last=time;
         displayed=reduced.matches?latest.current.progress:T.MathUtils.lerp(displayed,latest.current.progress,1-Math.exp(-delta*9));
-        timeline.seek(displayed*10000);if(!latest.current.paused&&!reduced.matches)idle+=delta;
+        timeline.seek(displayed*10000);
         background.copy(dark).lerp(cream,state.light);ambient.intensity=2.3*(1-state.wire);key.intensity=3.2*(1-state.wire);rim.intensity=2*(1-state.wire);
-        const aspect=width/height;model.root.position.set(mobile?0:aspect*1.85,mobile?4.3:0,0);model.root.rotation.set(0,state.yaw+(displayed<.1&&!reduced.matches?Math.sin(idle*.3)*.045:0),0);
+        const aspect=width/height;model.root.position.set(mobile?0:aspect*1.85,mobile?4.3:0,0);model.root.rotation.set(0,0,0);
         camera.zoom=mobile?.75-state.spread*.22:state.zoom;camera.updateProjectionMatrix();grid.position.x=model.root.position.x;gridMaterial.opacity=.065*(1-state.spread);grid.visible=!mobile&&state.spread<.85;
         for(const part of model.parts){let amount=state.spread;
           if(part.category==='shell')amount=Math.max(state.spread,state.shell);

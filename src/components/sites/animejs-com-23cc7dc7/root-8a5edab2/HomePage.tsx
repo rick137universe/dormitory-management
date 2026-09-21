@@ -5,6 +5,7 @@ import { ContinuousResidence } from './ContinuousResidence';
 import { ModuleConstellation } from './ModuleConstellation';
 import { RolePortal } from './RolePortal';
 import { bill, initialRepairs, student, type RepairRecord, type Service } from '@/lib/mock-campus';
+import { moduleCatalog, type DemoAccount, type ModuleId, type RoleId } from '@/lib/role-workspaces';
 import s from './HomePage.module.css';
 import n from './Narrative.module.css';
 
@@ -18,9 +19,17 @@ const chapters = [
  {name:'分析',eyebrow:'06 / OPERATIONS IN VIEW',title:['把运行状态，','变成可读的指标。'],description:'入住率、空余床位、欠费和维修完成率，从散开的部件汇成运营全貌。',action:'查看统计分析',at:.81},
  {name:'系统',eyebrow:'ONE RESIDENCE. EIGHT MODULES.',title:['彻底拆开，','才看见完整系统。'],description:'八大模块围绕同一栋公寓协同工作。最终以无色工程线稿呈现结构与权限边界。',action:'登录角色工作台',at:.96},
 ] as const;
+const chapterViews: Array<'overview' | ModuleId> = ['overview','base','accommodation','bed','repair','payment','analytics','overview'];
+const headerModules: Record<RoleId, ModuleId[]> = {
+  student: ['accommodation','payment','repair','personal'],
+  dormManager: ['base','accommodation','bed','repair'],
+  maintenance: ['repair','analytics','personal'],
+  admin: ['base','repair','analytics','system'],
+};
 export function HomePage() {
   const dialog=useRef<HTMLDialogElement>(null);const submitTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
   const [progress,setProgress]=useState(0);const [paused,setPaused]=useState(false);const [menuOpen,setMenuOpen]=useState(false);const [portalOpen,setPortalOpen]=useState(false);
+  const [session,setSession]=useState<DemoAccount|null>(null);const [portalView,setPortalView]=useState<'overview'|ModuleId>('overview');
   const [active,setActive]=useState<Service>('room');const [records,setRecords]=useState<RepairRecord[]>(initialRepairs);
   const [submitted,setSubmitted]=useState(false);const [sending,setSending]=useState(false);
   const stage=Math.min(chapters.length-1,Math.floor(progress*chapters.length));
@@ -28,15 +37,17 @@ export function HomePage() {
   useEffect(()=>{let frame=0;const update=()=>{const range=document.documentElement.scrollHeight-window.innerHeight;setProgress(Math.min(1,Math.max(0,window.scrollY/Math.max(1,range))));};const onScroll=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(update);};onScroll();window.addEventListener('scroll',onScroll,{passive:true});window.addEventListener('resize',onScroll);return()=>{cancelAnimationFrame(frame);window.removeEventListener('scroll',onScroll);window.removeEventListener('resize',onScroll);if(submitTimer.current)clearTimeout(submitTimer.current);};},[]);
   const open=useCallback((service:Service)=>{if(submitTimer.current)clearTimeout(submitTimer.current);setSending(false);setActive(service);setSubmitted(false);setMenuOpen(false);dialog.current?.showModal();},[]);
   function close(){if(submitTimer.current)clearTimeout(submitTimer.current);setSending(false);dialog.current?.close();}
+  function showPortal(view:'overview'|ModuleId='overview'){setPortalView(view);setPortalOpen(true);setMenuOpen(false);}
   function seek(value:number,instant=false){const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;window.scrollTo({top:value*(document.documentElement.scrollHeight-window.innerHeight),behavior:instant||reduced?'instant':'smooth'});setMenuOpen(false);}
   function submitRepair(event:FormEvent<HTMLFormElement>){event.preventDefault();const data=new FormData(event.currentTarget);const description=String(data.get('description')||'').trim();if(!description){const field=event.currentTarget.elements.namedItem('description') as HTMLTextAreaElement;field.setCustomValidity('请填写故障描述');field.reportValidity();return;}setSending(true);submitTimer.current=setTimeout(()=>{setRecords(r=>[{id:'BX'+Date.now(),title:data.get('category')+' · '+description.slice(0,30),status:'待审核',date:'刚刚'},...r]);setSending(false);setSubmitted(true);},450);}
   const title:Record<Service,string>={room:'我的住宿',repair:'维修服务',bill:'本月账单',profile:'我的公寓','notice-water':'供水维护通知','notice-safety':'宿舍用电安全提醒'};
   return <div className={n.story} data-light={light} data-chapter={stage}>
-    <ContinuousResidence progress={progress} paused={paused} onSelect={()=>setPortalOpen(true)}/>
+    <ContinuousResidence progress={progress} paused={paused} onSelect={()=>showPortal('overview')}/>
     <header className={n.header}>
       <button className={n.logo} onClick={()=>seek(0)} aria-label="Dorma 首页">dorma<span>●</span><small>校园生活服务</small></button>
       <nav className={menuOpen?n.navigationOpen:n.navigation} aria-label="主导航">
-        <button onClick={()=>seek(.28)}>住宿</button><button onClick={()=>seek(.55)}>维修</button><button onClick={()=>seek(.68)}>缴费</button><button onClick={()=>open('notice-water')}>公告</button><button className={n.account} onClick={()=>setPortalOpen(true)}>登录工作台 <ArrowUpRight size={14}/></button>
+        {session ? headerModules[session.role].map(moduleId=><button key={moduleId} onClick={()=>showPortal(moduleId)}>{moduleCatalog[moduleId].name}</button>) : <><button onClick={()=>seek(.28)}>住宿</button><button onClick={()=>seek(.55)}>维修</button><button onClick={()=>seek(.68)}>缴费</button></>}
+        <button onClick={()=>open('notice-water')}>公告</button><button className={n.account} onClick={()=>showPortal('overview')}>{session?session.roleName+'工作台':'登录工作台'} <ArrowUpRight size={14}/></button>
       </nav>
       <button className={n.menu} aria-label={menuOpen?'收起导航':'展开导航'} aria-expanded={menuOpen} onClick={()=>setMenuOpen(!menuOpen)}>{menuOpen?<X/>:<Menu/>}</button>
     </header>
@@ -47,8 +58,8 @@ export function HomePage() {
       <section className={n.copy} key={stage} aria-labelledby="chapter-heading">
         <p className={n.eyebrow}><span/> {chapter.eyebrow}</p>
         {stage===0?<h1 id="chapter-heading">{chapter.title[0]}<br/>{chapter.title[1]}</h1>:<h2 id="chapter-heading">{chapter.title[0]}<br/>{chapter.title[1]}</h2>}
-        <p className={n.description}>{chapter.description}</p>
-        <button className={n.cta} onClick={()=>setPortalOpen(true)}>{chapter.action}<ArrowUpRight size={17}/></button>
+        <p className={n.description}>{stage===0&&session?`已以${session.roleName}身份登录。首页与工作台只显示当前角色可访问的业务。`:chapter.description}</p>
+        <button className={n.cta} onClick={()=>showPortal(chapterViews[stage])}>{stage===0&&session?`进入${session.roleName}工作台`:chapter.action}<ArrowUpRight size={17}/></button>
         {stage===0&&<button className={n.explore} onClick={()=>seek(.14)}>向下滚动，拆解系统 <ArrowDown size={14}/></button>}
         {stage===2&&<div className={n.detail}><span>住宿业务链</span><div className={n.repairSteps}><span>入住</span><ArrowRight size={12}/><span>调宿</span><ArrowRight size={12}/><span>退宿</span></div><p>业务完成后自动同步床位状态</p></div>}
         {stage===3&&<div className={n.detail}><span>南苑 3 栋</span><strong>400 <small>/ 总床位</small></strong><p><i/> 371 已入住 · 25 空闲 · 4 维修</p></div>}
@@ -57,7 +68,7 @@ export function HomePage() {
         {stage===6&&<div className={n.detail}><span>全校公寓入住率</span><strong>91.4<small>%</small></strong><p>6,582 / 7,200 床 · 实时演示数据</p></div>}
       </section>
       <div className={n.buildingTag} aria-hidden="true"><span>NANYUAN RESIDENCE</span><strong>03</strong><span>南苑生活区 / 2026</span></div>
-      <ModuleConstellation progress={progress} onOpen={()=>setPortalOpen(true)}/>
+      <ModuleConstellation progress={progress} onOpen={showPortal}/>
       <div className={n.controls}>
         <button className={n.motion} onClick={()=>setPaused(!paused)} aria-label={paused?'播放自主动画':'暂停自主动画'} aria-pressed={paused}>{paused?<Play size={11}/>:<Pause size={11}/>}<span>{paused?'PLAY':'PAUSE'}</span></button>
         <span className={n.chapterNumber}>0{stage+1} <span>/ 08</span></span>
@@ -87,6 +98,6 @@ export function HomePage() {
         {active.startsWith('notice-') && <article className={s.noticeText}><p className={s.noticeDate}>公寓服务中心 / {active === 'notice-water' ? '2026.09.21' : '2026.09.18'} · 示例公告</p>{active === 'notice-water' ? <><h3>南苑 3 栋供水维护通知</h3><p>为保障日常用水，南苑 3 栋计划于 9 月 23 日 14:00—16:00 进行供水设施维护。期间可能出现短时停水，请同学们提前安排用水。</p><p>维护完成后将恢复供水。如遇持续异常，可通过「维修服务」提交报修。</p></> : <><h3>秋季宿舍用电安全提醒</h3><p>离开宿舍时，请及时关闭不使用的电器。请勿在宿舍内使用大功率违规电器，也不要将插线板放置在床铺等易燃物上。</p><p>发现插座松动、电线破损或异常发热时，请停止使用并联系宿管人员。</p></>}<button className={s.secondary} onClick={close}>我知道了 <Check size={16}/></button></article>}
       </div>
     </dialog>
-    <RolePortal open={portalOpen} onClose={()=>setPortalOpen(false)}/>
+    <RolePortal open={portalOpen} requestedView={portalView} onViewChange={setPortalView} onClose={()=>setPortalOpen(false)} onSessionChange={setSession}/>
   </div>;
 }

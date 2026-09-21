@@ -15,7 +15,13 @@ import {
 import { ModulePage } from './ModulePage';
 import s from './RolePortal.module.css';
 
-interface Props { open: boolean; onClose: () => void; }
+interface Props {
+  open: boolean;
+  requestedView: 'overview' | ModuleId;
+  onClose: () => void;
+  onViewChange: (view: 'overview' | ModuleId) => void;
+  onSessionChange: (account: DemoAccount | null) => void;
+}
 
 const moduleIcons: Record<ModuleId, LucideIcon> = {
   personal: CircleUserRound,
@@ -35,14 +41,22 @@ const roleIcons: Record<DemoAccount['role'], LucideIcon> = {
   admin: ShieldCheck,
 };
 
-export function RolePortal({ open, onClose }: Props) {
+function taskDestination(taskId: string): ModuleId {
+  if (taskId.startsWith('BX') || taskId.startsWith('PG')) return 'repair';
+  if (taskId.startsWith('ZF')) return 'payment';
+  if (taskId.startsWith('DR')) return 'base';
+  if (taskId.startsWith('BK')) return 'system';
+  return 'accommodation';
+}
+
+export function RolePortal({ open, requestedView, onClose, onViewChange, onSessionChange }: Props) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [account, setAccount] = useState<DemoAccount | null>(null);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [activeView, setActiveView] = useState<'overview' | ModuleId>('overview');
   const [toast, setToast] = useState('');
+  const setActiveView = onViewChange;
 
   useEffect(() => {
     const element = dialog.current;
@@ -65,13 +79,16 @@ export function RolePortal({ open, onClose }: Props) {
       return;
     }
     setAccount(match);
-    setActiveView('overview');
+    const allowed = requestedView === 'overview' || roleWorkspace[match.role].modules.includes(requestedView);
+    setActiveView(allowed ? requestedView : 'overview');
+    onSessionChange(match);
     setError('');
     setToast('');
   }
 
   function logout() {
     setAccount(null);
+    onSessionChange(null);
     setUsername('');
     setPassword('');
     setToast('');
@@ -83,6 +100,7 @@ export function RolePortal({ open, onClose }: Props) {
   }
 
   const workspace = account ? roleWorkspace[account.role] : null;
+  const activeView = account && requestedView !== 'overview' && !roleWorkspace[account.role].modules.includes(requestedView) ? 'overview' : requestedView;
 
   return (
     <dialog
@@ -156,7 +174,7 @@ export function RolePortal({ open, onClose }: Props) {
               {activeView === 'overview' ? <>
               <section className={s.welcome}>
                 <div><p>{workspace.greeting}</p><h3>{workspace.caption}</h3></div>
-                <button onClick={() => action('已打开当前待办队列（演示数据）')}>处理当前业务 <ArrowRight size={16} /></button>
+                <button onClick={() => setActiveView(workspace.modules.find(moduleId => moduleId !== 'personal') ?? 'personal')}>处理当前业务 <ArrowRight size={16} /></button>
               </section>
               <section className={s.metrics} aria-label="关键指标">
                 {workspace.metrics.map(metric => <article key={metric.label} data-tone={metric.tone}><span>{metric.label}</span><strong>{metric.value}</strong><p>{metric.note}</p><i /></article>)}
@@ -164,12 +182,12 @@ export function RolePortal({ open, onClose }: Props) {
               <div className={s.dashboardGrid}>
                 <section className={s.taskPanel}>
                   <div className={s.panelTitle}><div><small>TODO QUEUE</small><h3>待办事项</h3></div><span>{workspace.tasks.length}</span></div>
-                  <div className={s.taskList}>{workspace.tasks.map(task => <button key={task.id} onClick={() => action(`已打开 ${task.id}：${task.title}`)}><span data-status={task.status}><ClipboardCheck size={16} /></span><div><strong>{task.title}</strong><small>{task.id} · {task.meta}</small></div><em>{task.status}</em><ChevronRight size={15} /></button>)}</div>
+                  <div className={s.taskList}>{workspace.tasks.map(task => <button key={task.id} onClick={() => setActiveView(taskDestination(task.id))}><span data-status={task.status}><ClipboardCheck size={16} /></span><div><strong>{task.title}</strong><small>{task.id} · {task.meta}</small></div><em>{task.status}</em><ChevronRight size={15} /></button>)}</div>
                 </section>
                 <section className={s.focusPanel}>
                   <div className={s.panelTitle}><div><small>LIVE OVERVIEW</small><h3>{workspace.focusTitle}</h3></div><PackageCheck size={20} /></div>
                   <div className={s.focusRows}>{workspace.focusRows.map(row => <div key={row.label}><span>{row.label}</span><strong>{row.value}</strong><small>{row.detail}</small></div>)}</div>
-                  <button onClick={() => action(`正在查看${workspace.focusTitle}完整数据`)}>查看完整数据 <ArrowRight size={14} /></button>
+                  <button onClick={() => setActiveView(account.role === 'student' ? 'accommodation' : account.role === 'maintenance' ? 'repair' : account.role === 'admin' ? 'analytics' : 'bed')}>查看完整数据 <ArrowRight size={14} /></button>
                 </section>
               </div>
               </> : <ModulePage moduleId={activeView} role={account.role} onBack={() => setActiveView('overview')} onAction={action} />}
