@@ -2,25 +2,29 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { ArrowDown, ArrowRight, ArrowUpRight, Check, CircleHelp, Menu, Pause, Play, X } from 'lucide-react';
 import { ContinuousResidence } from './ContinuousResidence';
+import { ModuleConstellation } from './ModuleConstellation';
+import { RolePortal } from './RolePortal';
 import { bill, initialRepairs, student, type RepairRecord, type Service } from '@/lib/mock-campus';
 import s from './HomePage.module.css';
 import n from './Narrative.module.css';
 
 const chapters = [
- {name:'序章',eyebrow:'A PLACE TO BELONG',title:['一栋公寓，','你的整个日常。'],description:'从安心入住，到每一次及时回应。把生活的小事，交给 Dorma。',action:'进入我的公寓',service:'profile',at:0},
- {name:'展开',eyebrow:'EVERY DETAIL, CONNECTED',title:['生活的细节，','一层层展开。'],description:'顺着空间探索，让每一项服务，出现在你需要的地方。',action:'探索住宿服务',service:'room',at:.2},
- {name:'住宿',eyebrow:'01 / YOUR OWN SPACE',title:['每一间房，','都有归属。'],description:'房间、床位与入住信息，清楚地放在一起。安顿好自己，开始新的校园生活。',action:'查看我的住宿',service:'room',at:.36},
- {name:'维修',eyebrow:'02 / CARE IN EVERY CORNER',title:['看不见的照顾，','也能被看见。'],description:'从一滴漏水到一盏灯。提交问题、追踪进度，让每一次报修都有回应。',action:'提交报修',service:'repair',at:.55},
- {name:'账单',eyebrow:'03 / LIFE IN BALANCE',title:['每一度电，','每一笔都清晰。'],description:'水费、电费与住宿账单。一处查看，让日常开支心里有数。',action:'查看本月账单',service:'bill',at:.71},
- {name:'全貌',eyebrow:'ONE RESIDENCE. ALL CONNECTED.',title:['拆开复杂，','把简单留给生活。'],description:'住宿、维修、缴费，连接成完整的校园日常。每个部分，各司其职。',action:'回到我的公寓',service:'profile',at:.95},
+ {name:'序章',eyebrow:'A PLACE TO BELONG',title:['一栋公寓，','四种工作视角。'],description:'同一栋楼，不同身份看到不同的业务。登录后，Dorma 只呈现与你有关的服务。',action:'登录 Dorma',at:0},
+ {name:'基础',eyebrow:'01 / THE SHARED FOUNDATION',title:['每一条信息，','都有清楚归属。'],description:'学生、楼栋、房间与床位构成统一底座。外墙先退场，让数据结构从建筑内部显现。',action:'查看角色权限',at:.14},
+ {name:'住宿',eyebrow:'02 / ACCOMMODATION FLOW',title:['从申请开始，','让入住落到床位。'],description:'入住、调宿与退宿环环相扣。楼层逐层分离，同时同步每一个床位状态。',action:'进入住宿业务',at:.28},
+ {name:'床位',eyebrow:'03 / EVERY BED COUNTS',title:['空闲或入住，','状态始终一致。'],description:'容量、分配与有效入住一起校验，避免重复分床和学生重复入住。',action:'查看床位状态',at:.41},
+ {name:'维修',eyebrow:'04 / REPAIR LIFECYCLE',title:['一张工单，','穿过整栋公寓。'],description:'学生报修、宿管初审、管理员派工、维修处理，再回到学生评价。管线随流程向外展开。',action:'进入报修流程',at:.55},
+ {name:'缴费',eyebrow:'05 / EVERY BILL EXPLAINED',title:['每一笔费用，','都能回到明细。'],description:'住宿费、水费与电费自动成账，支持缴费登记、欠费查询和多维统计。',action:'进入缴费管理',at:.68},
+ {name:'分析',eyebrow:'06 / OPERATIONS IN VIEW',title:['把运行状态，','变成可读的指标。'],description:'入住率、空余床位、欠费和维修完成率，从散开的部件汇成运营全貌。',action:'查看统计分析',at:.81},
+ {name:'系统',eyebrow:'ONE RESIDENCE. EIGHT MODULES.',title:['彻底拆开，','才看见完整系统。'],description:'八大模块围绕同一栋公寓协同工作。最终以无色工程线稿呈现结构与权限边界。',action:'登录角色工作台',at:.96},
 ] as const;
 export function HomePage() {
   const dialog=useRef<HTMLDialogElement>(null);const submitTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
-  const [progress,setProgress]=useState(0);const [paused,setPaused]=useState(false);const [menuOpen,setMenuOpen]=useState(false);
+  const [progress,setProgress]=useState(0);const [paused,setPaused]=useState(false);const [menuOpen,setMenuOpen]=useState(false);const [portalOpen,setPortalOpen]=useState(false);
   const [active,setActive]=useState<Service>('room');const [records,setRecords]=useState<RepairRecord[]>(initialRepairs);
   const [submitted,setSubmitted]=useState(false);const [sending,setSending]=useState(false);
-  const stage=progress<.14?0:progress<.29?1:progress<.46?2:progress<.63?3:progress<.80?4:5;
-  const chapter=chapters[stage];const light=(progress>.225&&progress<.46)||progress>.81;
+  const stage=Math.min(chapters.length-1,Math.floor(progress*chapters.length));
+  const chapter=chapters[stage];const light=progress>.82;
   useEffect(()=>{let frame=0;const update=()=>{const range=document.documentElement.scrollHeight-window.innerHeight;setProgress(Math.min(1,Math.max(0,window.scrollY/Math.max(1,range))));};const onScroll=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(update);};onScroll();window.addEventListener('scroll',onScroll,{passive:true});window.addEventListener('resize',onScroll);return()=>{cancelAnimationFrame(frame);window.removeEventListener('scroll',onScroll);window.removeEventListener('resize',onScroll);if(submitTimer.current)clearTimeout(submitTimer.current);};},[]);
   const open=useCallback((service:Service)=>{if(submitTimer.current)clearTimeout(submitTimer.current);setSending(false);setActive(service);setSubmitted(false);setMenuOpen(false);dialog.current?.showModal();},[]);
   function close(){if(submitTimer.current)clearTimeout(submitTimer.current);setSending(false);dialog.current?.close();}
@@ -28,11 +32,11 @@ export function HomePage() {
   function submitRepair(event:FormEvent<HTMLFormElement>){event.preventDefault();const data=new FormData(event.currentTarget);const description=String(data.get('description')||'').trim();if(!description){const field=event.currentTarget.elements.namedItem('description') as HTMLTextAreaElement;field.setCustomValidity('请填写故障描述');field.reportValidity();return;}setSending(true);submitTimer.current=setTimeout(()=>{setRecords(r=>[{id:'BX'+Date.now(),title:data.get('category')+' · '+description.slice(0,30),status:'待审核',date:'刚刚'},...r]);setSending(false);setSubmitted(true);},450);}
   const title:Record<Service,string>={room:'我的住宿',repair:'维修服务',bill:'本月账单',profile:'我的公寓','notice-water':'供水维护通知','notice-safety':'宿舍用电安全提醒'};
   return <div className={n.story} data-light={light} data-chapter={stage}>
-    <ContinuousResidence progress={progress} paused={paused} onSelect={open}/>
+    <ContinuousResidence progress={progress} paused={paused} onSelect={()=>setPortalOpen(true)}/>
     <header className={n.header}>
       <button className={n.logo} onClick={()=>seek(0)} aria-label="Dorma 首页">dorma<span>●</span><small>校园生活服务</small></button>
       <nav className={menuOpen?n.navigationOpen:n.navigation} aria-label="主导航">
-        <button onClick={()=>seek(.36)}>住宿</button><button onClick={()=>seek(.55)}>维修</button><button onClick={()=>seek(.71)}>账单</button><button onClick={()=>open('notice-water')}>公告</button><button className={n.account} onClick={()=>open('profile')}>我的公寓 <ArrowUpRight size={14}/></button>
+        <button onClick={()=>seek(.28)}>住宿</button><button onClick={()=>seek(.55)}>维修</button><button onClick={()=>seek(.68)}>缴费</button><button onClick={()=>open('notice-water')}>公告</button><button className={n.account} onClick={()=>setPortalOpen(true)}>登录工作台 <ArrowUpRight size={14}/></button>
       </nav>
       <button className={n.menu} aria-label={menuOpen?'收起导航':'展开导航'} aria-expanded={menuOpen} onClick={()=>setMenuOpen(!menuOpen)}>{menuOpen?<X/>:<Menu/>}</button>
     </header>
@@ -44,17 +48,19 @@ export function HomePage() {
         <p className={n.eyebrow}><span/> {chapter.eyebrow}</p>
         {stage===0?<h1 id="chapter-heading">{chapter.title[0]}<br/>{chapter.title[1]}</h1>:<h2 id="chapter-heading">{chapter.title[0]}<br/>{chapter.title[1]}</h2>}
         <p className={n.description}>{chapter.description}</p>
-        <button className={n.cta} onClick={()=>open(chapter.service)}>{chapter.action}<ArrowUpRight size={17}/></button>
-        {stage===0&&<button className={n.explore} onClick={()=>seek(.2)}>向下滚动，展开生活 <ArrowDown size={14}/></button>}
-        {stage===2&&<div className={n.detail}><span>南苑 3 栋</span><strong>502 <small>/ 02 床</small></strong><p><i/> 已入住 · 四人间</p></div>}
-        {stage===3&&<div className={n.detail}><span>从提交到解决</span><div className={n.repairSteps}><span>提交</span><ArrowRight size={12}/><span>处理中</span><ArrowRight size={12}/><span>完成</span></div><p>{records.length} 条报修记录 · 进度随时可查</p></div>}
-        {stage===4&&<div className={n.detail}><span>2026 年 9 月 · 待缴金额</span><strong><small>¥ </small>128.60</strong><p>水费 ¥28.60 / 电费 ¥100.00</p></div>}
+        <button className={n.cta} onClick={()=>setPortalOpen(true)}>{chapter.action}<ArrowUpRight size={17}/></button>
+        {stage===0&&<button className={n.explore} onClick={()=>seek(.14)}>向下滚动，拆解系统 <ArrowDown size={14}/></button>}
+        {stage===2&&<div className={n.detail}><span>住宿业务链</span><div className={n.repairSteps}><span>入住</span><ArrowRight size={12}/><span>调宿</span><ArrowRight size={12}/><span>退宿</span></div><p>业务完成后自动同步床位状态</p></div>}
+        {stage===3&&<div className={n.detail}><span>南苑 3 栋</span><strong>400 <small>/ 总床位</small></strong><p><i/> 371 已入住 · 25 空闲 · 4 维修</p></div>}
+        {stage===4&&<div className={n.detail}><span>报修全生命周期</span><div className={n.repairSteps}><span>初审</span><ArrowRight size={12}/><span>派工</span><ArrowRight size={12}/><span>评价</span></div><p>{records.length} 条学生演示记录 · 角色分步处理</p></div>}
+        {stage===5&&<div className={n.detail}><span>2026 年 9 月 · 待缴金额</span><strong><small>¥ </small>128.60</strong><p>水费 ¥28.60 / 电费 ¥100.00</p></div>}
+        {stage===6&&<div className={n.detail}><span>全校公寓入住率</span><strong>91.4<small>%</small></strong><p>6,582 / 7,200 床 · 实时演示数据</p></div>}
       </section>
       <div className={n.buildingTag} aria-hidden="true"><span>NANYUAN RESIDENCE</span><strong>03</strong><span>南苑生活区 / 2026</span></div>
-      {stage===5&&<aside className={n.moduleLegend}><div><span>日常服务，一处连接</span><span>03 MODULES</span></div><div className={n.colorBar}><i/><i/><i/></div><div className={n.legendLinks}><button onClick={()=>open('room')}><i/>住宿管理</button><button onClick={()=>open('repair')}><i/>维修服务</button><button onClick={()=>open('bill')}><i/>账单缴费</button></div></aside>}
+      <ModuleConstellation progress={progress} onOpen={()=>setPortalOpen(true)}/>
       <div className={n.controls}>
         <button className={n.motion} onClick={()=>setPaused(!paused)} aria-label={paused?'播放自主动画':'暂停自主动画'} aria-pressed={paused}>{paused?<Play size={11}/>:<Pause size={11}/>}<span>{paused?'PLAY':'PAUSE'}</span></button>
-        <span className={n.chapterNumber}>0{stage+1} <span>/ 06</span></span>
+        <span className={n.chapterNumber}>0{stage+1} <span>/ 08</span></span>
         <input type="range" min="0" max="1000" step="1" value={Math.round(progress*1000)} onChange={e=>seek(Number(e.target.value)/1000,true)} aria-label="探索公寓进度"/>
         <span className={n.progressLabel}>{Math.round(progress*100)}%</span>
       </div>
@@ -81,5 +87,6 @@ export function HomePage() {
         {active.startsWith('notice-') && <article className={s.noticeText}><p className={s.noticeDate}>公寓服务中心 / {active === 'notice-water' ? '2026.09.21' : '2026.09.18'} · 示例公告</p>{active === 'notice-water' ? <><h3>南苑 3 栋供水维护通知</h3><p>为保障日常用水，南苑 3 栋计划于 9 月 23 日 14:00—16:00 进行供水设施维护。期间可能出现短时停水，请同学们提前安排用水。</p><p>维护完成后将恢复供水。如遇持续异常，可通过「维修服务」提交报修。</p></> : <><h3>秋季宿舍用电安全提醒</h3><p>离开宿舍时，请及时关闭不使用的电器。请勿在宿舍内使用大功率违规电器，也不要将插线板放置在床铺等易燃物上。</p><p>发现插座松动、电线破损或异常发热时，请停止使用并联系宿管人员。</p></>}<button className={s.secondary} onClick={close}>我知道了 <Check size={16}/></button></article>}
       </div>
     </dialog>
+    <RolePortal open={portalOpen} onClose={()=>setPortalOpen(false)}/>
   </div>;
 }

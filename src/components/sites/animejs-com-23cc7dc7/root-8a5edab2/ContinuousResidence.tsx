@@ -24,7 +24,7 @@ export function ContinuousResidence({ progress, paused, onSelect }: Props) {
       element.appendChild(renderer.domElement);
       cleanup=()=>{renderer.setAnimationLoop(null);renderer.dispose();renderer.domElement.remove();};
       const scene=new T.Scene();const background=new T.Color(0x252423);scene.background=background;
-      const camera=new T.OrthographicCamera(-10,10,8,-8,.1,120);camera.position.set(0,9,23);camera.lookAt(0,0,0);
+      const camera=new T.OrthographicCamera(-10,10,8,-8,.1,120);camera.position.set(0,6.4,23);camera.lookAt(0,0,0);
       const ambient=new T.HemisphereLight(0xf7eddb,0x4c5954,2.5);scene.add(ambient);
       const key=new T.DirectionalLight(0xffe6c7,3.6);key.position.set(-8,14,12);key.castShadow=true;key.shadow.mapSize.set(1024,1024);key.shadow.camera.left=-12;key.shadow.camera.right=12;key.shadow.camera.top=14;key.shadow.camera.bottom=-12;key.shadow.bias=-.001;scene.add(key);
       const rim=new T.DirectionalLight(0xb8d5df,2.0);rim.position.set(10,4,-8);scene.add(rim);
@@ -41,8 +41,8 @@ export function ContinuousResidence({ progress, paused, onSelect }: Props) {
         {at:.41,yaw:1.22,tilt:-.02,spread:.27,shell:1,light:1,wire:.12,zoom:.74,lift:0},
         {at:.55,yaw:2.42,tilt:.03,spread:.36,shell:.78,light:0,wire:0,zoom:.74,lift:0},
         {at:.72,yaw:3.62,tilt:-.04,spread:.45,shell:.86,light:0,wire:.08,zoom:.72,lift:0},
-        {at:.88,yaw:4.65,tilt:-.13,spread:.86,shell:1,light:1,wire:.95,zoom:.64,lift:0},
-        {at:1,yaw:5.0,tilt:-.16,spread:1,shell:1,light:1,wire:1,zoom:.61,lift:0},
+        {at:.88,yaw:4.65,tilt:0,spread:.86,shell:1,light:1,wire:.95,zoom:.57,lift:0},
+        {at:1,yaw:5.0,tilt:0,spread:1,shell:1,light:1,wire:1,zoom:.50,lift:0},
       ];
       const timeline=createTimeline({autoplay:false});
       keys.slice(1).forEach((k,i)=>{timeline.add(state,{yaw:k.yaw,tilt:k.tilt,spread:k.spread,shell:k.shell,light:k.light,wire:k.wire,zoom:k.zoom,duration:(k.at-keys[i].at)*10000,ease:'inOutSine'},keys[i].at*10000);});
@@ -60,8 +60,8 @@ export function ContinuousResidence({ progress, paused, onSelect }: Props) {
         const delta=Math.min(.05,(time-last)/1000||.016);last=time;
         displayed=reduced.matches?latest.current.progress:T.MathUtils.lerp(displayed,latest.current.progress,1-Math.exp(-delta*9));
         timeline.seek(displayed*10000);if(!latest.current.paused&&!reduced.matches)idle+=delta;
-        background.copy(dark).lerp(cream,state.light);ambient.intensity=2.3+state.wire*.7;key.intensity=3.2-state.wire*1.7;
-        const aspect=width/height;model.root.position.set(mobile?0:aspect*1.95,mobile?4.3:0,0);model.root.rotation.set(.02,state.yaw+(displayed<.1&&!reduced.matches?Math.sin(idle*.3)*.045:0),state.tilt);
+        background.copy(dark).lerp(cream,state.light);ambient.intensity=2.3*(1-state.wire);key.intensity=3.2*(1-state.wire);rim.intensity=2*(1-state.wire);
+        const aspect=width/height;model.root.position.set(mobile?0:aspect*1.85,mobile?4.3:0,0);model.root.rotation.set(0,state.yaw+(displayed<.1&&!reduced.matches?Math.sin(idle*.3)*.045:0),0);
         camera.zoom=mobile?.75-state.spread*.22:state.zoom;camera.updateProjectionMatrix();grid.position.x=model.root.position.x;gridMaterial.opacity=.065*(1-state.spread);grid.visible=!mobile&&state.spread<.85;
         for(const part of model.parts){let amount=state.spread;
           if(part.category==='shell')amount=Math.max(state.spread,state.shell);
@@ -70,7 +70,7 @@ export function ContinuousResidence({ progress, paused, onSelect }: Props) {
           if(part.category==='bill')amount=Math.max(state.spread,state.shell*.3 + .75*T.MathUtils.smoothstep(displayed,.61,.68)*(1-T.MathUtils.smoothstep(displayed,.76,.84)));
           part.object.position.copy(part.home).addScaledVector(part.spread,amount);part.object.rotation.set(part.spin.x*amount,part.spin.y*amount,part.spin.z*amount);
         }
-        for(const m of model.surfaceMaterials){const base=m.userData.baseColor as import('three').Color;const emissive=m.userData.baseEmissive as import('three').Color;m.color.copy(base).lerp(cream,state.wire);m.emissive.copy(emissive).multiplyScalar(1-state.wire);m.emissiveIntensity=.24; m.metalness=.12*(1-state.wire);m.roughness=.7+state.wire*.3;}
+        for(const m of model.surfaceMaterials){const base=m.userData.baseColor as import('three').Color;const emissive=m.userData.baseEmissive as import('three').Color;m.color.copy(base).lerp(cream,state.wire);m.emissive.copy(emissive).lerp(cream,state.wire);m.emissiveIntensity=.24*(1-state.wire)+state.wire;m.metalness=.12*(1-state.wire);m.roughness=.7+state.wire*.3;}
         for(const m of model.edgeMaterials){m.color.copy(edgeDark).lerp(edgeLight,state.wire);m.opacity=.16+state.wire*.62;const c=m.userData.category;const focus=(displayed>.29&&displayed<.46&&c==='room')||(displayed>.46&&displayed<.63&&c==='repair')||(displayed>.63&&displayed<.79&&c==='bill');if(focus){m.color.set(c==='repair'?0xc7eb86:c==='bill'?0xb9a5e9:0x9e6752);m.opacity=.64;}}
         renderer.render(scene,camera);element!.dataset.ready='true';element!.dataset.progress=displayed.toFixed(3);element!.dataset.parts=String(model.parts.length);element!.dataset.drawCalls=String(renderer.info.render.calls);
       });
