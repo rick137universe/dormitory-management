@@ -171,10 +171,8 @@ export function HomePage() {
     <header className={h.header}>
       <button className={h.brand} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>dorma<span>●</span><small>校园生活服务</small></button>
       {session && <nav className={h.chapterNames} aria-label="功能导航">
-        {features.map((feature, index) => <Link key={feature.id}
+        {features.map((feature) => <Link key={feature.id}
           href={'/workspace/' + session.role + '/' + feature.id + '/' + feature.actions[0].id}
-          data-active={index === activeIndex}
-          aria-current={index === activeIndex ? 'location' : undefined}
           onClick={() => window.sessionStorage.setItem('dorma-return-progress', String(progress))}>
           {feature.title}
         </Link>)}
