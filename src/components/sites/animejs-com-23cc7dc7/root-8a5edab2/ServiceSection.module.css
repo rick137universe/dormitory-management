@@ -57,7 +57,7 @@
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: background-color 180ms ease;
+  transition:none;
 }
 
 .card + .card {
@@ -155,7 +155,7 @@
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: background-color 180ms ease;
+  transition:none;
 }
 
 .notice:hover {

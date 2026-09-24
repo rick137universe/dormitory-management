@@ -4,12 +4,15 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Check, LogOut, ShieldAlert, X } from 'lucide-react';
-import { ModulePage } from './ModulePage';
+import { ActionWorkspace } from './ActionWorkspace';
+import { MaintenanceWorkspace } from './MaintenanceWorkspace';
+import { RepairWorkspace } from './RepairWorkspace';
 import { readDemoSession, saveDemoSession } from '@/lib/demo-session';
 import { featureFor, roleFeatures } from '@/lib/role-experiences';
 import { demoAccounts, type DemoAccount, type RoleId } from '@/lib/role-workspaces';
 import portal from './RolePortal.module.css';
 import s from './WorkspaceRoute.module.css';
+import { ThemeSelect } from '@/components/ThemeProvider';
 
 const validRoles: RoleId[] = ['student', 'dormManager', 'maintenance', 'admin'];
 
@@ -22,7 +25,7 @@ export function WorkspaceRoute() {
   const [detail, setDetail] = useState('');
   const role = validRoles.includes(params.role as RoleId) ? params.role as RoleId : null;
   const feature = role ? featureFor(role, params.feature) : undefined;
-  const actionId = Array.isArray(params.action) ? params.action[0] : undefined;
+  const actionId = pathname.split('/')[4];
   const action = feature?.actions.find(item => item.id === actionId) ?? feature?.actions[0];
 
   useEffect(() => {
@@ -43,15 +46,10 @@ export function WorkspaceRoute() {
     router.push('/');
   }
 
-  function actionNotice(message: string) {
-    setDetail(message);
-    router.push(pathname + '?detail=' + encodeURIComponent(message), { scroll: false });
-  }
-
   function completeDetail() {
     setToast(detail + '已完成演示操作');
     setDetail('');
-    router.push(pathname, { scroll: false });
+    window.history.replaceState(null, '', pathname);
     window.setTimeout(() => setToast(''), 2200);
   }
 
@@ -75,42 +73,29 @@ export function WorkspaceRoute() {
 
   return <div className={s.page}>
     <header className={s.topbar}>
-      <button onClick={() => router.back()}><ArrowLeft size={15} />返回镜头</button>
+      <button onClick={() => router.push('/')}><ArrowLeft size={15} />返回镜头</button>
       <div><span>{account.roleName}</span><strong>{feature.title} / {action?.label}</strong></div>
-      <button onClick={logout}><LogOut size={14} />退出登录</button>
+      <div className={s.topbarTools}><ThemeSelect /><button onClick={logout}><LogOut size={14} />退出登录</button></div>
     </header>
     <main className={s.content}>
-      <div className={s.actionTitle}><p>{feature.eyebrow} / SELECTED ACTION</p><h1>{action?.label}</h1><span>{feature.description}</span></div>
+      <div className={s.actionTitle}><p>{feature.eyebrow} / SELECTED ACTION</p><h1>{feature.title}</h1><span>{feature.description}</span></div>
       <nav className={s.actionTabs} aria-label={feature.title + '详细功能'}>
-        {feature.actions.map(item => <button key={item.id} data-active={item.id === action?.id} onClick={() => router.push('/workspace/' + role + '/' + feature.id + '/' + item.id)}>
+        {feature.actions.map(item => <button key={item.id} data-active={item.id === action?.id} onClick={() => window.history.pushState(null, '', '/workspace/' + role + '/' + feature.id + '/' + item.id)}>
           <span>{item.label}</span><ArrowRight size={14} />
         </button>)}
       </nav>
       <div className={portal.workspaceContent}>
-        <ModulePage
-          key={action?.id}
-          moduleId={feature.module}
-          role={account.role}
-          context={{
-            featureId: feature.id,
-            title: feature.title,
-            eyebrow: feature.eyebrow + ' / AUTHORIZED FEATURE',
-            description: feature.description,
-            actionLabel: action?.label ?? feature.title,
-          }}
-          onBack={() => router.back()}
-          onAction={actionNotice}
-        />
+        {role === 'maintenance' ? <MaintenanceWorkspace featureId={feature.id} actionId={action?.id ?? 'action-1'} /> : role === 'student' && feature.id === 'repair' ? <RepairWorkspace actionId={action?.id ?? 'action-1'} /> : <ActionWorkspace key={feature.id} feature={feature} actionId={action?.id ?? 'action-1'} role={account.role} />}
       </div>
     </main>
     {detail && <div className={s.drawerBackdrop} onClick={() => {
       setDetail('');
-      router.push(pathname, { scroll: false });
+      window.history.replaceState(null, '', pathname);
     }}>
       <aside className={s.detailDrawer} onClick={event => event.stopPropagation()}>
         <header><div><p>BUSINESS DETAIL</p><h2>{detail}</h2></div><button onClick={() => {
           setDetail('');
-          router.push(pathname, { scroll: false });
+          window.history.replaceState(null, '', pathname);
         }}><X size={18} /></button></header>
         <section>
           <label>当前功能<strong>{action?.label}</strong></label>

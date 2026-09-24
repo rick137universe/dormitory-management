@@ -9,6 +9,7 @@ interface Props {
   role: RoleId;
   context?: {
     featureId: string;
+    actionId?: string;
     title: string;
     eyebrow: string;
     description: string;
@@ -26,11 +27,17 @@ interface PageConfig {
   rows: string[][];
 }
 
-function modulePage(moduleId: ModuleId, role: RoleId, featureId?: string): PageConfig {
-  if (featureId === 'announcements') return {
-    caption: '查看公寓通知、缴费提醒和安全公告。', primary: '标记全部已读',
-    stats: [['未读公告', '2', '含 1 条缴费提醒'], ['本月发布', '8', '公寓通知 5 条'], ['阅读完成率', '96%', '较上月 +3%']],
-    columns: ['公告标题', '发布部门', '发布时间', '状态'], rows: [['国庆假期宿舍安全提醒', '学生公寓中心', '09.20 16:30', '未读'], ['9 月水电费缴费通知', '财务服务中心', '09.19 09:00', '未读'], ['公共洗衣区设备维护完成', '南苑 3 栋', '09.18 18:10', '已读']],
+export function modulePage(moduleId: ModuleId, role: RoleId, featureId?: string, actionId?: string): PageConfig {
+  if (featureId === 'announcements') return actionId === 'action-2' ? {
+    caption: '查看待缴账单、缴费截止日期与提醒记录。', primary: '查看待缴账单',
+    stats: [['待缴金额', '¥128.60', '9 月水电费'], ['待处理提醒', '1', '截止 09.28'], ['已缴账单', '2', '历史账单已结清']],
+    columns: ['缴费项目', '金额', '截止日期', '状态'],
+    rows: [['9 月水电费', '¥128.60', '2026.09.28', '待缴费'], ['8 月水电费', '¥96.20', '2026.08.28', '已缴清'], ['2026—2027 住宿费', '¥1,500.00', '2026.09.01', '已缴清']],
+  } : {
+    caption: '查看公寓日常通知、设施维护安排与安全公告。', primary: '标记全部已读',
+    stats: [['未读通知', '2', '安全提醒与检查安排'], ['本月通知', '5', '学生公寓中心发布'], ['已读通知', '3', '本月阅读记录']],
+    columns: ['通知标题', '发布部门', '发布时间', '状态'],
+    rows: [['国庆假期宿舍安全提醒', '学生公寓中心', '09.20 16:30', '未读'], ['宿舍消防设施检查安排', '安全管理办公室', '09.19 09:00', '未读'], ['公共洗衣区设备维护完成', '南苑 3 栋', '09.18 18:10', '已读']],
   };
   if (featureId === 'records') return {
     caption: '查看本人维修记录、处理时长和服务评价。', primary: '导出维修记录',
@@ -99,10 +106,10 @@ function modulePage(moduleId: ModuleId, role: RoleId, featureId?: string): PageC
 }
 
 export function ModulePage({ moduleId, role, context, onBack, onAction }: Props) {
-  const page = modulePage(moduleId, role, context?.featureId);
-  const displayTitle = context?.title ?? moduleCatalog[moduleId].name;
-  const displayCaption = context?.description ?? page.caption;
-  const primaryAction = context?.actionLabel ?? page.primary;
+  const page = modulePage(moduleId, role, context?.featureId, context?.actionId);
+  const displayTitle = context?.actionLabel ?? context?.title ?? moduleCatalog[moduleId].name;
+  const displayCaption = context?.featureId === 'announcements' ? page.caption : context?.description ?? page.caption;
+  const primaryAction = context?.featureId === 'announcements' ? page.primary : context?.actionLabel ?? page.primary;
   return <div className={s.modulePage}>
     <div className={s.breadcrumb}><button onClick={onBack}><ArrowLeft size={13} />返回上一页</button><span>/</span><strong>{displayTitle}</strong></div>
     <section className={s.moduleHero}>

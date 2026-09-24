@@ -1,9 +1,56 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { animate } from 'animejs';
+import { useEffect, useRef, useState } from 'react';
 import type { RoleFeature } from '@/lib/role-experiences';
 import s from './LensExperience.module.css';
+import { DotWave, HologramRoute, ClockTicks, FloatingShapes, CampusNetwork, ServiceAssembly, RepairScrollLines } from './LensMotionDetails';
+
+function mixHex(from: string, to: string, amount: number) {
+  const channel = (color: string, offset: number) => Number.parseInt(color.slice(offset, offset + 2), 16);
+  const value = [1, 3, 5].map(offset => Math.round(channel(from, offset) * (1 - amount) + channel(to, offset) * amount));
+  return '#' + value.map(part => part.toString(16).padStart(2, '0')).join('');
+}
+
+function lensColor(color: string) {
+  return mixHex(color, '#77716d', .14);
+}
+
+function blueprintDrawPath(progress: number) {
+  const sweep = Math.max(0, Math.min(1, progress));
+  if (sweep <= 0) return 'M320 320';
+  if (sweep >= 1) return 'M0 0H640V640H0Z';
+  const angle = -Math.PI / 2 + sweep * Math.PI * 2;
+  const x = 320 + Math.cos(angle) * 340;
+  const y = 320 + Math.sin(angle) * 340;
+  return `M320 320L320 -20A340 340 0 ${sweep > .5 ? 1 : 0} 1 ${x} ${y}Z`;
+}
+
+// Keep the highlight on the curved glass edge. Its angular span grows during
+// the same camera push that rotates the other reflection lines.
+function reflectionBandPath(progress: number) {
+  const turn = Math.max(0, Math.min(1, progress));
+  const start = -190 + 40 * turn;
+  const end = -135 + 60 * turn;
+  const point = (radius: number, degrees: number) => {
+    const angle = degrees * Math.PI / 180;
+    return `${(320 + radius * Math.cos(angle)).toFixed(2)} ${(320 + radius * Math.sin(angle)).toFixed(2)}`;
+  };
+  return `M${point(218, start)}A218 218 0 0 1 ${point(218, end)}Q${point(205, end + 3)} ${point(194, end)}A194 194 0 0 0 ${point(194, start)}Q${point(206, start - 3)} ${point(218, start)}Z`;
+}
+
+// Match the camera push's CSS cubic-bezier(.15,.45,.2,1) in the reflection.
+function approachEase(progress: number) {
+  const x = Math.max(0, Math.min(1, progress));
+  let t = x;
+  for (let iteration = 0; iteration < 6; iteration++) {
+    const inverse = 1 - t;
+    const position = 3 * inverse * inverse * t * .15 + 3 * inverse * t * t * .2 + t * t * t;
+    const slope = 3 * inverse * inverse * .15 + 6 * inverse * t * (.2 - .15) + 3 * t * t * (1 - .2);
+    t = Math.max(0, Math.min(1, t - (position - x) / slope));
+  }
+  const inverse = 1 - t;
+  return 3 * inverse * inverse * t * .45 + 3 * inverse * t * t + t * t * t;
+}
 
 interface Props {
   features: RoleFeature[];
@@ -12,45 +59,84 @@ interface Props {
   blurred: boolean;
   transitioning: boolean;
   theme: 'light' | 'dark';
-  onSeek: (index: number) => void;
+  hasScrolled: boolean;
+  introProgress: number;
 }
 
-export function LensExperience({ features, activeIndex, localProgress, blurred, transitioning, theme, onSeek }: Props) {
-  const shell = useRef<HTMLDivElement>(null);
+export function LensExperience({ features, activeIndex, localProgress, blurred, transitioning, theme, hasScrolled, introProgress }: Props) {
+  const [finish, setFinish] = useState(0);
+  const finishRef = useRef(0);
+  const complete = !blurred && activeIndex === features.length - 1 && localProgress >= .995;
 
   useEffect(() => {
-    if (blurred || !shell.current) return;
-    animate(shell.current, { scale: [0.96, 1], filter: ['blur(14px)', 'blur(0px)'], opacity: [0.55, 1], duration: 760, ease: 'outExpo' });
-  }, [blurred, features]);
+    const from = finishRef.current;
+    const target = complete ? 1 : 0;
+    if (from === target) return;
+    const started = performance.now();
+    let frame = 0;
+    const update = (time: number) => {
+      const t = Math.min(1, (time - started) / 650);
+      const eased = t * t * (3 - 2 * t);
+      const value = from + (target - from) * eased;
+      finishRef.current = value;
+      setFinish(value);
+      if (t < 1) frame = requestAnimationFrame(update);
+    };
+    frame = requestAnimationFrame(update);
+    return () => cancelAnimationFrame(frame);
+  }, [complete]);
+
 
   const active = features[activeIndex];
   const blueprint = theme === 'light';
-  const activeColor = blueprint ? '#242321' : active?.color ?? '#777';
-  const count = Math.max(1, features.length);
-  const segmentLength = 100 / count - 1.25;
+  const targetColor = blueprint ? '#242424' : lensColor(complete ? features[0]?.color ?? '#777777' : active?.color ?? '#777777');
+  const [activeColor, setActiveColor] = useState(targetColor);
+  const activeColorRef = useRef(targetColor);
 
-  return <div ref={shell} className={s.shell} data-blurred={blurred} data-transitioning={transitioning} data-theme={theme}>
+  useEffect(() => {
+    const from = activeColorRef.current;
+    if (from === targetColor) return;
+    const started = performance.now();
+    let frame = 0;
+    const update = (time: number) => {
+      const portion = Math.min(1, (time - started) / 160);
+      const next = mixHex(from, targetColor, portion * portion * (3 - 2 * portion));
+      activeColorRef.current = next;
+      setActiveColor(next);
+      if (portion < 1) frame = requestAnimationFrame(update);
+    };
+    frame = requestAnimationFrame(update);
+    return () => cancelAnimationFrame(frame);
+  }, [targetColor]);
+  const count = Math.max(1, features.length);
+  const segmentLength = 100 / count - .45;
+  const lightTurn = approachEase((introProgress - .7) / (1.15 / 4.8));
+  const blueprintSweep = (introProgress - .48) / .22;
+  const tickColor = blueprint ? '#5c5954' : active?.motion === 'identity' && !blurred ? active.color : activeColor;
+
+  return <div className={s.shell} data-blurred={blurred} data-transitioning={transitioning} data-theme={theme}>
     <svg className={s.lens} viewBox="0 0 640 640" role="img" aria-label={blurred ? '等待登录的 Dorma 镜头' : active.title + '动画'}>
       <defs>
-        <radialGradient id="lens-glass" cx="38%" cy="30%">
-          <stop offset="0" stopColor="#3d3b3c" stopOpacity=".54" />
-          <stop offset=".56" stopColor="#202020" stopOpacity=".18" />
-          <stop offset="1" stopColor="#090909" stopOpacity=".85" />
-        </radialGradient>
+        <linearGradient id="housing-metal" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor={blueprint ? "#b8b4ad" : "#746c64"} /><stop offset=".22" stopColor={blueprint ? "#d1cdc5" : "#383533"} /><stop offset=".5" stopColor={blueprint ? "#898680" : "#171716"} /><stop offset=".78" stopColor={blueprint ? "#b8b4ad" : "#44403b"} /><stop offset="1" stopColor={blueprint ? "#5f5c58" : "#080808"} /></linearGradient>
         <filter id="lens-glow"><feGaussianBlur stdDeviation="5" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
         <pattern id="dot-grid" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.5" fill={activeColor} opacity={blueprint ? '.34' : '.18'} /></pattern>
         <mask id="tick-progress-mask">
           <circle cx="320" cy="320" r="242" pathLength="100" fill="none" stroke="white" strokeWidth="18" strokeDasharray={(localProgress * 100) + ' ' + (100 - localProgress * 100)} transform="rotate(-90 320 320)" />
         </mask>
-        <mask id="tick-sweep-mask">
-          <circle cx="320" cy="320" r="242" pathLength="100" fill="none" stroke="white" strokeWidth="26" strokeDasharray="9 91" transform={'rotate(' + (-90 + localProgress * 360) + ' 320 320)'} />
-        </mask>
+        <clipPath id="lens-blueprint-reveal" clipPathUnits="userSpaceOnUse"><path d={blueprintDrawPath(blueprintSweep)} /></clipPath>
       </defs>
-      <circle cx="320" cy="320" r="291" fill={blueprint ? '#f2f0ea' : '#171717'} stroke={blueprint ? '#242321' : '#090909'} strokeWidth="14" />
-      <circle cx="320" cy="320" r="274" fill="none" stroke={blueprint ? '#8f8b84' : '#30302f'} strokeWidth="5" />
-      <circle cx="320" cy="320" r="258" fill="none" stroke={blueprint ? '#d4d0c8' : '#111'} strokeWidth="13" />
+      <g clipPath={blueprint && introProgress < .7 ? 'url(#lens-blueprint-reveal)' : undefined}>
+      {!blueprint && <circle cx="320" cy="327" r="299" fill="#080808" stroke="#191817" strokeWidth="3" />}
+      <circle cx="320" cy="320" r="291" fill={blueprint ? '#efede7' : '#171717'} stroke={blueprint ? '#242424' : '#090909'} strokeWidth="8" />
+      <g data-outer-housing="true" fill="none" pointerEvents="none">
+        <circle cx="320" cy="320" r="297" stroke={blueprint ? '#5e5e5e' : '#5b5551'} strokeWidth="1.2" />
+        <circle cx="320" cy="320" r="288" stroke="url(#housing-metal)" strokeWidth="7" />
+        <circle cx="320" cy="320" r="289" pathLength="100" stroke={blueprint ? '#d2cec7' : '#b3a69a'} strokeWidth="1.4" strokeDasharray="22 78" transform="rotate(205 320 320)" opacity=".36" />
+      </g>
+      <circle cx="320" cy="320" r="274" fill={blueprint ? '#efede7' : 'none'} stroke={blueprint ? '#817e78' : '#30302f'} strokeWidth="2" />
+      <circle cx="320" cy="320" r="258" fill="none" stroke={blueprint ? '#b9b5ae' : '#111'} strokeWidth="6" />
       {features.map((feature, index) => {
-        const segmentProgress = blurred ? 0 : index < activeIndex ? 1 : index === activeIndex ? localProgress : 0;
+        const segmentProgress = blurred ? 0 : index < activeIndex ? 1 : index === activeIndex ? (complete ? localProgress + (1 - localProgress) * finish : localProgress) : 0;
         const rotation = -90 + index * 360 / count;
         return <g key={feature.id}>
           <circle
@@ -58,71 +144,76 @@ export function LensExperience({ features, activeIndex, localProgress, blurred, 
             cx="320" cy="320" r="265"
             pathLength="100"
             fill="none"
-            stroke={blueprint ? '#aaa69f' : blurred ? '#575450' : '#30302d'}
+            stroke={blueprint ? '#242321' : blurred ? '#575450' : feature.color}
+            strokeOpacity={blueprint || blurred ? 1 : 1 - .38 * Math.max(0, Math.min(1, (introProgress - .39) / .57))}
             strokeWidth="7"
             strokeLinecap="butt"
             strokeDasharray={segmentLength + ' ' + (100 - segmentLength)}
             transform={'rotate(' + rotation + ' 320 320)'}
-            onClick={() => onSeek(index)}
           />
-          {segmentProgress > 0 && <circle
-            className={index === activeIndex ? s.activeSegment : s.segment}
-            cx="320" cy="320" r="265"
-            pathLength="100"
-            fill="none"
-            stroke={blueprint ? '#242321' : feature.color}
-            strokeWidth={index === activeIndex ? 9 : 7}
-            strokeLinecap="butt"
-            strokeDasharray={(segmentLength * segmentProgress) + ' ' + (100 - segmentLength * segmentProgress)}
-            transform={'rotate(' + rotation + ' 320 320)'}
-          />}
+          {segmentProgress > 0 && <>
+            <circle
+              className={s.activeHalo}
+              cx="320" cy="320" r="265"
+              pathLength="100" fill="none"
+              stroke={blueprint ? '#242424' : feature.color}
+              strokeWidth="12"
+              strokeDasharray={(segmentLength * segmentProgress) + ' ' + (100 - segmentLength * segmentProgress)}
+              transform={'rotate(' + rotation + ' 320 320)'}
+              opacity={index === activeIndex && !complete ? .45 : 0}
+              filter="url(#lens-glow)"
+            />
+            <circle
+              className={index === activeIndex && !complete ? s.activeSegment : s.segment}
+              cx="320" cy="320" r="265"
+              pathLength="100"
+              fill="none"
+              stroke={blueprint ? '#242424' : feature.color}
+              strokeWidth={index === activeIndex && !complete ? 11 : 7}
+              strokeLinecap="butt"
+              strokeDasharray={(segmentLength * segmentProgress) + ' ' + (100 - segmentLength * segmentProgress)}
+              transform={'rotate(' + rotation + ' 320 320)'}
+            />
+          </>}
         </g>;
       })}
-      <circle className={s.ticksBase} cx="320" cy="320" r="242" pathLength="120" fill="none" stroke={blueprint ? '#918d86' : '#56534c'} strokeWidth="15" strokeDasharray=".28 .72" opacity=".52" />
-      {!blurred && <circle className={s.ticks} cx="320" cy="320" r="242" pathLength="120" fill="none" stroke={activeColor} strokeWidth="15" strokeDasharray=".28 .72" mask="url(#tick-progress-mask)" />}
-      {!blurred && <circle className={s.tickSweep} cx="320" cy="320" r="242" pathLength="120" fill="none" stroke={activeColor} strokeWidth="24" strokeDasharray=".28 .72" mask="url(#tick-sweep-mask)" />}
-      <circle cx="320" cy="320" r="225" fill={blueprint ? '#f7f5ef' : 'url(#lens-glass)'} stroke={blueprint ? '#242321' : '#090909'} strokeWidth="8" />
-      <circle className={s.dotField} cx="320" cy="320" r="205" fill="url(#dot-grid)" fillOpacity={blurred ? 0 : .08 + localProgress * .92} stroke={blueprint ? '#aaa69f' : '#2b2929'} strokeWidth="2" />
-      <path className={s.glare} d="M177 180c54-62 128-88 208-70-75 13-126 50-170 111-22 31-35 64-42 101-18-44-16-99 4-142Z" fill={blueprint ? '#242321' : undefined} />
-      {!blurred && <MotionGraphic feature={{ ...active, color: activeColor }} progress={localProgress} blueprint={blueprint} />}
-      <line x1="320" y1="64" x2="320" y2="84" stroke={activeColor} strokeWidth="3" />
+      <g data-tick-rails="true" fill="none" stroke={activeColor} opacity={blurred ? .05 : .12} pointerEvents="none">
+        {[236, 249].map(radius => <circle key={radius} cx="320" cy="320" r={radius} strokeWidth=".65" />)}
+      </g>
+      <circle cx="320" cy="320" r="225" fill={blueprint ? '#efede7' : '#151515'} stroke={blueprint ? '#242424' : '#090909'} strokeWidth="5" />
+      <circle className={s.dotField} cx="320" cy="320" r="205" fill={blueprint || active?.motion === 'identity' ? "none" : "url(#dot-grid)"} fillOpacity={blurred ? 0 : .08 + localProgress * .92} stroke={blueprint ? '#aaaaaa' : '#2b2929'} strokeWidth="2" />
+      <g data-lens-bevel="true" fill="none" pointerEvents="none">
+        {[210, 214, 219, 228].map((radius, index) => <circle key={radius} cx="320" cy="320" r={radius} stroke={blueprint ? '#707070' : index % 2 ? '#474342' : '#090909'} strokeWidth={index === 2 ? 2 : .8} opacity={blueprint ? .35 : .8} />)}
+      </g>
+      <g data-lens-reflection="true" fill="none" transform={'rotate(' + (72 - 72 * lightTurn) + ' 320 320)'} opacity={.38 + .62 * lightTurn} pointerEvents="none">
+        <path className={s.glare} d={reflectionBandPath(lightTurn)} fill={blueprint ? '#242424' : undefined} />
+        {[211, 216, 222].map((radius, index) => <circle key={radius} cx="320" cy="320" r={radius} stroke={blueprint ? '#242424' : '#ffd0b7'} strokeWidth={index === 1 ? 2.4 : 1.3} pathLength="100" strokeDasharray={(13 - index * 2) + ' 100'} transform={'rotate(' + (5 + index * 5) + ' 320 320)'} opacity={blueprint ? .38 : .78} />)}
+      </g>
+      {/* Keep extended clock marks above the glass and bevel so their full length stays visible. */}
+      <ClockTicks progress={localProgress} color={tickColor} highlightColor={mixHex(tickColor, blueprint ? '#000000' : '#ffffff', blueprint ? .42 : .55)} clock={active?.motion === 'broadcast' && !complete} blurred={blurred} baseOpacity={.65 + .2 * (1 - lightTurn)} />
+      {!blurred && <g opacity={1 - finish}><MotionGraphic key={active.id} feature={{ ...active, color: activeColor }} progress={localProgress} blueprint={blueprint} started={hasScrolled} /></g>}
+      </g>
     </svg>
   </div>;
 }
 
-function MotionGraphic({ feature, progress }: { feature: RoleFeature; progress: number; blueprint: boolean }) {
+function MotionGraphic({ feature, progress, started }: { feature: RoleFeature; progress: number; blueprint: boolean; started: boolean }) {
   const p = Math.max(0, Math.min(1, progress));
   const color = feature.color;
 
-  if (feature.motion === 'identity') {
-    return <g className={s.motion}>
-      {Array.from({ length: 28 }, (_, index) => {
-        const angle = index * (Math.PI * 2 / 28);
-        const innerX = 320 + Math.cos(angle) * 42;
-        const innerY = 320 + Math.sin(angle) * 42;
-        const outerX = 320 + Math.cos(angle) * 172;
-        const outerY = 320 + Math.sin(angle) * 172;
-        const delay = (index % 7) * .12;
-        return <circle key={index} cx={innerX} cy={innerY} r="3" fill={color}>
-          <animate attributeName="cx" values={innerX + ';' + outerX} dur="2.8s" begin={delay + 's'} repeatCount="indefinite" />
-          <animate attributeName="cy" values={innerY + ';' + outerY} dur="2.8s" begin={delay + 's'} repeatCount="indefinite" />
-          <animate attributeName="r" values="3;11;0" keyTimes="0;.54;1" dur="2.8s" begin={delay + 's'} repeatCount="indefinite" />
-          <animate attributeName="opacity" values="0;.92;0" keyTimes="0;.28;1" dur="2.8s" begin={delay + 's'} repeatCount="indefinite" />
-        </circle>;
-      })}
-      <circle cx="320" cy="270" r="42" fill="none" stroke={color} strokeWidth="6" />
-      <path d="M238 421C241 365 272 337 320 337C368 337 399 365 402 421" fill="none" stroke={color} strokeWidth="7" strokeLinecap="round" />
-      <path d="M248 424C263 397 286 383 320 383C354 383 377 397 392 424" fill="none" stroke={color} strokeWidth="2" opacity=".5" />
-    </g>;
-  }
+  if (feature.motion === 'identity') return <DotWave color={color} started={started} />;
 
   if (feature.motion === 'battery') {
-    const height = 190 * p;
-    return <g className={s.motion} filter="url(#lens-glow)">
-      <rect className={s.batteryShell} x="248" y="184" width="144" height="266" rx="37" fill="none" stroke={color} strokeWidth="6" />
-      <rect className={s.batteryCap} x="298" y="165" width="44" height="15" rx="7" fill={color} />
+    const charge = Math.min(1, p / .78);
+    const light = charge * charge * (3 - 2 * charge);
+    const height = 240 * light;
+    const exit = Math.max(0, Math.min(1, (p - .96) / .04));
+    return <g className={s.motion} data-battery-charge={charge} opacity={1 - exit * exit * (3 - 2 * exit)}>
+      <rect className={s.batteryShell} x="248" y="184" width="144" height="266" rx="37" fill="none" stroke={color} strokeWidth="13" opacity={light * .48} filter="url(#lens-glow)" />
+      <rect className={s.batteryShell} x="248" y="184" width="144" height="266" rx="37" fill="none" stroke={color} strokeWidth="6" opacity={.25 + light * .75} />
+      <rect className={s.batteryCap} x="298" y="165" width="44" height="15" rx="7" fill={color} opacity={.25 + light * .75} />
       <clipPath id="battery-clip"><rect x="260" y="197" width="120" height="240" rx="27" /></clipPath>
-      <rect className={s.batteryFill} x="260" y={427 - height} width="120" height={height} fill={color} clipPath="url(#battery-clip)" opacity=".88" />
+      <rect className={s.batteryFill} x="260" y={437 - height} width="120" height={height} fill={color} clipPath="url(#battery-clip)" opacity={.35 + light * .6} />
     </g>;
   }
 
@@ -131,70 +222,25 @@ function MotionGraphic({ feature, progress }: { feature: RoleFeature; progress: 
       const lit = index / 20 <= p;
       const x = 213 + (index % 4) * 58;
       const y = 203 + Math.floor(index / 4) * 52;
-      return <rect key={index} x={x} y={y} width="42" height="31" rx="2" fill={lit ? color : 'none'} fillOpacity={index === 13 ? .18 : .78} stroke={index === 13 ? '#ff5367' : color} strokeWidth={lit ? 2.5 : 1} opacity={lit ? 1 : .25} />;
+      return <rect key={index} x={x} y={y} width="42" height="31" rx="2" fill={lit ? color : 'none'} fillOpacity={index === 13 ? .18 : .78} stroke={index === 13 ? '#ff5367' : color} strokeWidth={lit ? 2.5 : 1} opacity={lit ? 1 : .25}><animate attributeName="fill-opacity" values={lit ? ".38;.86;.38" : ".03;.2;.03"} dur="3.2s" begin={(-index * .15) + 's'} repeatCount="indefinite" /></rect>;
     })}</g>;
   }
 
-  if (feature.motion === 'workflow') {
-    const guideProgress = Math.min(1, p * 1.65);
-    return <g className={s.motion}>
-      <path id="repair-guide" d="M174 380C220 192 345 205 352 319C359 433 425 440 466 260" pathLength="100" fill="none" stroke={color} strokeWidth="2" strokeDasharray={(guideProgress * 100) + ' 100'} opacity=".46" />
-      {Array.from({ length: 8 }, (_, index) => {
-        const reveal = Math.max(0, Math.min(1, p * 1.55 - index * .075));
-        const offset = (index - 3.5) * 8;
-        return <path
-          key={index}
-          d="M174 380C220 192 345 205 352 319C359 433 425 440 466 260"
-          pathLength="100"
-          fill="none"
-          stroke={color}
-          strokeWidth={index === 3 || index === 4 ? 5 : 2.4}
-          strokeDasharray={(reveal * 100) + ' 100'}
-          strokeLinecap="round"
-          transform={'translate(' + offset + ' ' + (-offset * .55) + ')'}
-          opacity={.2 + (1 - Math.abs(index - 3.5) / 4) * .66}
-        />;
-      })}
-      <circle r="7" fill={color} filter="url(#lens-glow)">
-        <animateMotion dur="3.8s" repeatCount="indefinite" rotate="auto"><mpath href="#repair-guide" /></animateMotion>
-      </circle>
-      {[0, 1, 2].map(index => <circle key={index} cx={214 + index * 112} cy={index === 1 ? 249 : index === 2 ? 391 : 302} r={6 + p * 7} fill="#171717" stroke={color} strokeWidth="3" opacity={Math.max(.18, p - index * .16)} />)}
-    </g>;
-  }
+  if (feature.motion === 'workflow') return <g className={s.motion}><RepairScrollLines color={color} progress={p} /></g>;
 
-  if (feature.motion === 'orderRoute') {
-    return <g className={s.motion}>
-      <g className={s.routeMap}>
-        <path id="order-intake-route" d="M203 247C255 177 362 187 405 244C458 313 429 410 349 431C270 453 185 397 191 322C194 286 225 275 263 292C301 309 332 367 382 350C423 336 427 284 394 257C360 230 307 239 282 273C253 312 276 365 319 374" fill="none" stroke={color} strokeWidth="12" opacity=".18" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M203 247C255 177 362 187 405 244C458 313 429 410 349 431C270 453 185 397 191 322C194 286 225 275 263 292C301 309 332 367 382 350C423 336 427 284 394 257C360 230 307 239 282 273C253 312 276 365 319 374" pathLength="100" fill="none" stroke={color} strokeWidth="4" strokeDasharray={(p * 100) + ' 100'} strokeLinecap="round" strokeLinejoin="round" />
-        {[['203', '247'], ['405', '244'], ['349', '431'], ['191', '322'], ['382', '350']].map(([x, y], index) => <circle key={x + y} cx={x} cy={y} r={p > index * .18 ? 10 : 5} fill={p > index * .18 ? color : '#20201f'} stroke={color} strokeWidth="2" />)}
-        <polygon className={s.routeArrow} points="-13,-8 14,0 -13,8 -7,0" fill={color} filter="url(#lens-glow)">
-          <animateMotion dur="5.4s" repeatCount="indefinite" rotate="auto"><mpath href="#order-intake-route" /></animateMotion>
-        </polygon>
-      </g>
-      <circle className={s.routeHub} cx="320" cy="320" r={25 + p * 11} fill="#171717" stroke={color} strokeWidth="4" />
-      <path d="M307 320l9 9 19-21" fill="none" stroke={color} strokeWidth="4" pathLength="100" strokeDasharray={(p * 100) + ' 100'} />
-    </g>;
-  }
+  if (feature.motion === 'orderRoute') return <HologramRoute color={color} started={started} />;
 
-  if (feature.motion === 'service') {
-    const turn = -32 + p * 88;
-    return <g className={s.motion}>
-      <circle cx="320" cy="320" r="132" fill="none" stroke={color} strokeWidth="3" strokeDasharray="5 12" opacity=".38" />
-      <circle className={s.serviceOrbit} cx="320" cy="320" r="108" fill="none" stroke={color} strokeWidth="9" pathLength="100" strokeDasharray={(18 + p * 72) + ' 100'} strokeLinecap="round" />
-      <g className={s.serviceTool} transform={'rotate(' + turn + ' 320 320)'}>
-        <path d="M258 212C279 224 288 247 281 268L371 358C385 372 385 394 371 408C357 422 335 422 321 408L231 318C210 325 187 316 175 295L215 283L226 250L214 210C229 206 244 207 258 212Z" fill="none" stroke={color} strokeWidth="9" strokeLinejoin="round" />
-        <circle cx="346" cy="383" r="11" fill="none" stroke={color} strokeWidth="5" />
-      </g>
-      {[0, 1, 2].map(index => <g key={index} transform={'rotate(' + (-90 + index * 120) + ' 320 320)'}><circle cx="320" cy="188" r={p > index / 3 ? 13 : 7} fill={p > index / 3 ? color : '#1d1d1c'} stroke={color} strokeWidth="3" /><line x1="320" y1="205" x2="320" y2="226" stroke={color} strokeWidth="3" /></g>)}
-    </g>;
-  }
+  if (feature.motion === 'service') return <ServiceAssembly color={color} />;
 
   if (feature.motion === 'dispatch') {
-    const branches = ['M190 320H310L448 220', 'M190 320H465', 'M190 320H310L448 420'];
-    return <g className={s.motion}>
-      {branches.map((path, index) => <path key={path} d={path} pathLength="100" fill="none" stroke={color} strokeWidth="4" strokeDasharray={(Math.max(0, p * 1.35 - index * .16) * 100) + ' 100'} opacity={1 - index * .18} />)}
-      {[220, 320, 420].map((y, index) => <g key={y}><circle cx="448" cy={y} r={p > .55 + index * .1 ? 16 : 7} fill={p > .55 + index * .1 ? color : '#20201f'} stroke={color} strokeWidth="3" /><circle cx="448" cy={y} r={26 + p * 8} fill="none" stroke={color} opacity={p * .35} /></g>)}
+    const branches = ['M190 320H310L448 220', 'M190 320H448', 'M190 320H310L448 420'];
+    return <g className={s.motion} data-motion="dispatch">
+      {branches.map((path, index) => <g key={path}>
+        <GuidePath d={path} color={color} delay={index * .45} />
+        <path d={path} pathLength="100" fill="none" stroke={color} strokeWidth="3" strokeDasharray={(Math.max(0, Math.min(1, p * 1.35 - index * .16)) * 100) + ' 100'} />
+        <circle r="4" fill={color} opacity=".45"><animateMotion path={path} dur="3s" begin={(-index * .6) + 's'} repeatCount="indefinite" /></circle>
+      </g>)}
+      {[220, 320, 420].map((y, index) => <g key={y}><circle cx="448" cy={y} r="15" fill={color} fillOpacity={p > .55 + index * .1 ? 1 : .12} stroke={color} strokeWidth="2" /><circle cx="448" cy={y} r="29" fill="none" stroke={color} opacity=".22" /></g>)}
       <rect x="165" y="299" width="50" height="42" rx="5" fill={color} opacity={.3 + p * .7} />
     </g>;
   }
@@ -210,39 +256,30 @@ function MotionGraphic({ feature, progress }: { feature: RoleFeature; progress: 
     </g>;
   }
 
-  if (feature.motion === 'rooms') {
-    return <g className={s.motion}>
-      {[0, 1, 2].map(index => {
-        const x = 205 + index * 82 + (index - 1) * p * 25;
-        const y = 242 + Math.abs(index - 1) * p * 30;
-        return <g key={index} transform={'translate(' + (index === 0 ? -p * 12 : index === 2 ? p * 12 : 0) + ' 0)'}>
-          <rect x={x} y={y} width="66" height="150" rx="4" fill={index === Math.round(p * 2) ? color : 'none'} fillOpacity=".22" stroke={color} strokeWidth={index === Math.round(p * 2) ? 5 : 2} />
-          <line x1={x + 14} y1={y + 105} x2={x + 52} y2={y + 105} stroke={color} strokeWidth="3" />
-          <circle cx={x + 52} cy={y + 76} r="4" fill={color} />
-        </g>;
-      })}
-      <path d="M220 430H420" stroke={color} strokeWidth="3" strokeDasharray={(p * 200) + ' 220'} />
-    </g>;
-  }
+  if (feature.motion === 'rooms') return <FloatingShapes color={color} />;
+
+  if (feature.motion === 'campus') return <CampusNetwork color={color} />;
 
   if (feature.motion === 'data') {
-    const morphWidth = 48 + p * 190;
-    const morphHeight = 218 - p * 158;
-    return <g className={s.motion}>
-      {[0, 1, 2].map(index => <rect key={index} x={320 - morphWidth / 2 - index * 13} y={320 - morphHeight / 2 + index * 13} width={morphWidth + index * 26} height={morphHeight - index * 26} rx={8 + p * 18} fill={index === 0 ? color : 'none'} fillOpacity={index === 0 ? .16 + p * .38 : 0} stroke={color} strokeWidth={index === 0 ? 5 : 2} opacity={1 - index * .22} />)}
-      {Array.from({ length: 5 }, (_, index) => <line key={index} x1={235 + p * 28} y1={270 + index * 25} x2={235 + p * (145 + index * 4)} y2={270 + index * 25} stroke={color} strokeWidth={index === 0 ? 7 : 3} opacity={Math.max(.12, p - index * .1)} />)}
+    const width = 180 + p * 100;
+    const height = 280 - p * 100;
+    return <g className={s.motion} data-motion="data">
+      <rect x={320 - width / 2} y={320 - height / 2} width={width} height={height} rx="34" fill="none" stroke={color} strokeWidth="2.5" strokeDasharray="1 7" strokeLinecap="round" opacity=".5" />
+      <HarmonicBalls progress={p} color={color} />
     </g>;
   }
 
   if (feature.motion === 'record') {
-    return <g className={s.motion}>
+    return <g className={s.motion} data-motion="record">
       <rect x="218" y="190" width="204" height="260" rx="9" fill="none" stroke={color} strokeWidth="3" />
-      {Array.from({ length: 6 }, (_, index) => {
-        const lineProgress = Math.max(0, Math.min(1, p * 2.1 - index * .18));
-        return <line key={index} x1="247" y1={235 + index * 31} x2={247 + 145 * lineProgress} y2={235 + index * 31} stroke={color} strokeWidth={index === 0 ? 7 : 4} opacity={.35 + lineProgress * .65} />;
-      })}
-      <circle cx="386" cy="410" r={18 + p * 12} fill="none" stroke={color} strokeWidth="4" opacity={p} />
-      <path d="M370 410l11 11 23-27" fill="none" stroke={color} strokeWidth="5" pathLength="100" strokeDasharray={(p * 100) + ' 100'} />
+      {Array.from({ length: 5 }, (_, index) => <g key={index}>
+        <path d={'M247 ' + (235 + index * 29) + 'h' + (index === 0 ? 140 : 118 - index * 10)} fill="none" stroke={color} strokeWidth={index === 0 ? 6 : 3} opacity=".16" />
+        <path data-record-row={index} d={'M247 ' + (235 + index * 29) + 'h' + (index === 0 ? 140 : 118 - index * 10)} fill="none" stroke={color} strokeWidth={index === 0 ? 6 : 3} pathLength="100" opacity=".65">
+          <animate attributeName="stroke-dasharray" values="0 100;100 100;100 100;0 100" keyTimes="0;.4;.75;1" dur="3.6s" begin={(-index * .25) + 's'} repeatCount="indefinite" />
+        </path>
+      </g>)}
+      <circle cx="386" cy="410" r="27" fill="none" stroke={color} strokeWidth="2" opacity=".25" />
+      <path data-record-check="true" d="M370 410l11 11 23-27" fill="none" stroke={color} strokeWidth="5" pathLength="100" strokeDasharray={(p * 100) + ' 100'} />
     </g>;
   }
 
@@ -250,7 +287,7 @@ function MotionGraphic({ feature, progress }: { feature: RoleFeature; progress: 
     return <g className={s.motion}>
       {[78, 128, 96, 176, 142].map((height, index) => {
         const animatedHeight = height * p;
-        return <rect key={index} x={215 + index * 46} y={410 - animatedHeight} width="26" height={animatedHeight} rx="3" fill={color} opacity={.35 + index * .13} />;
+        return <rect key={index} x={215 + index * 46} y={410 - animatedHeight} width="26" height={animatedHeight} rx="3" fill={color} opacity={.35 + index * .13}><animate attributeName="height" values={[animatedHeight * .8, animatedHeight, animatedHeight * .8].join(';')} dur="3s" begin={(-index * .3) + 's'} repeatCount="indefinite" /><animate attributeName="y" values={[410 - animatedHeight * .8, 410 - animatedHeight, 410 - animatedHeight * .8].join(';')} dur="3s" begin={(-index * .3) + 's'} repeatCount="indefinite" /></rect>;
       })}
       {[245, 300, 355].map((y, index) => <line key={y} x1="205" y1={y} x2={435 - index * 25} y2={y} stroke={color} strokeWidth="3" strokeDasharray={(p * 240) + ' 260'} opacity={.85 - index * .18} />)}
       <line x1="198" y1="414" x2="442" y2="414" stroke={color} strokeWidth="5" />
@@ -259,7 +296,16 @@ function MotionGraphic({ feature, progress }: { feature: RoleFeature; progress: 
 
   if (feature.motion === 'analytics') {
     return <g className={s.motion}>
-      {[72, 108, 145].map((radius, index) => <circle key={radius} cx="320" cy="320" r={radius} fill="none" stroke={color} strokeWidth={index === 0 ? 11 : 4} pathLength="100" strokeDasharray={(p * (58 + index * 12)) + ' 100'} transform={'rotate(' + (-90 + index * 56) + ' 320 320)'} opacity={1 - index * .22} />)}
+      {[72, 108, 145].map((radius, index) => <g key={radius} transform={'rotate(' + (-90 + index * 56) + ' 320 320)'}>
+        <g>
+          <animateTransform attributeName="transform" type="rotate" from="0 320 320" to={(index % 2 ? -360 : 360) + ' 320 320'} dur={(10 + index * 5) + 's'} repeatCount="indefinite" />
+          <circle cx="320" cy="320" r={radius} fill="none" stroke={color} strokeWidth={index === 0 ? 7 : 2.5}
+            pathLength="100" strokeDasharray={(28 + p * 30 + index * 8) + ' 100'} opacity={1 - index * .22}>
+            <animate attributeName="stroke-dasharray" values={`${32 + index * 10} 100;${65 + index * 8} 100;${32 + index * 10} 100`} dur={(4 + index) + 's'} repeatCount="indefinite" />
+          </circle>
+          <circle cx={320 + radius} cy="320" r="2.5" fill={color} opacity={.8 - index * .15} />
+        </g>
+      </g>)}
       {[0, 1, 2, 3].map(index => <rect key={index} x={252 + index * 46} y={355 - index * 23 * p} width="22" height={45 + index * 23 * p} fill={color} opacity={.32 + index * .18} />)}
     </g>;
   }
@@ -273,6 +319,8 @@ function MotionGraphic({ feature, progress }: { feature: RoleFeature; progress: 
         const x = 320 + Math.cos(radians) * 135;
         const y = 320 + Math.sin(radians) * 135;
         return <g key={angle}>
+          <GuidePath d={'M320 320L' + x + ' ' + y} color={color} delay={index * .5} />
+          <circle r="4" fill={color} stroke="none" opacity=".6"><animateMotion path={'M320 320L' + x + ' ' + y} dur="2.8s" begin={(-index * .5) + 's'} repeatCount="indefinite" /></circle>
           <line x1="320" y1="320" x2={x} y2={y} stroke={color} strokeWidth="4" pathLength="100" strokeDasharray={(Math.max(0, p * 1.5 - index * .16) * 100) + ' 100'} />
           <rect x={x - 23} y={y - 18} width="46" height="36" rx="5" fill={p > index * .2 ? color : '#1c1c1b'} fillOpacity={p > index * .2 ? .68 : 1} stroke={color} strokeWidth="3" />
         </g>;
@@ -281,27 +329,39 @@ function MotionGraphic({ feature, progress }: { feature: RoleFeature; progress: 
   }
 
   if (feature.motion === 'backup') {
-    return <g className={s.motion}>
-      {[250, 390].map((x, index) => <g key={x}>
-        <circle cx={x} cy="320" r={64 + index * 8} fill="none" stroke={color} strokeWidth="5" strokeDasharray={index ? '8 10' : undefined} opacity={index ? p : 1} />
-        <circle cx={x} cy="320" r="38" fill={color} opacity={index ? p * .35 : .35} />
+    return <g className={s.motion} data-motion="backup">
+      {[205, 435].map((x, index) => <g key={x}>
+        <circle cx={x} cy="320" r="55" fill="none" stroke={color} strokeWidth="3" opacity={index ? .35 + p * .65 : 1} />
+        <circle cx={x} cy="320" r="32" fill={color} opacity={index ? .12 + p * .23 : .35} />
       </g>)}
-      <path d="M300 320H350" stroke={color} strokeWidth="5" strokeDasharray={(p * 50) + ' 60'} />
-      {Array.from({ length: 4 }, (_, index) => <circle key={index} cx={292 + ((p + index * .22) % 1) * 106} cy={302 + index * 12} r="6" fill={color} filter="url(#lens-glow)" />)}
-      <path d="M230 400C285 448 385 448 430 398" fill="none" stroke={color} strokeWidth="3" pathLength="100" strokeDasharray={(p * 100) + ' 100'} />
+      {[302, 320, 338].map((y, index) => <g key={y}>
+        <GuidePath d={'M264 ' + y + 'H376'} color={color} delay={index * .4} />
+        <path d={'M264 ' + y + 'H376'} fill="none" stroke={color} strokeWidth="2" pathLength="100" strokeDasharray={(p * 100) + ' 100'} />
+        <rect x="-4" y={y - 3} width="8" height="6" rx="1" fill={color} opacity=".65">
+          <animate attributeName="x" values="264;368" dur="2.2s" begin={(-index * .65) + 's'} repeatCount="indefinite" />
+          <animate attributeName="opacity" values="0;.75;.75;0" keyTimes="0;.15;.85;1" dur="2.2s" begin={(-index * .65) + 's'} repeatCount="indefinite" />
+        </rect>
+      </g>)}
     </g>;
   }
 
   if (feature.motion === 'broadcast') {
     const angle = p * Math.PI * 2 - Math.PI / 2;
-    const needleStartX = 320 + Math.cos(angle) * 28;
-    const needleStartY = 320 + Math.sin(angle) * 28;
-    const needleEndX = 320 + Math.cos(angle) * 148;
-    const needleEndY = 320 + Math.sin(angle) * 148;
     return <g className={s.motion}>
-      {[55, 92, 132].map((radius, index) => <circle className={s.echoRing} key={radius} cx="320" cy="320" r={radius * p} fill="none" stroke={color} strokeWidth="4" opacity={1 - index * .24} />)}
-      <line x1={needleStartX} y1={needleStartY} x2={needleEndX} y2={needleEndY} stroke={color} strokeWidth="6" strokeLinecap="round" />
-      <circle className={s.pulseDot} cx="320" cy="320" r="12" fill={color} />
+      {Array.from({ length: 12 }, (_, index) => {
+        const segmentProgress = Math.max(0, Math.min(1, p * 12 - index));
+        if (segmentProgress === 0) return null;
+        // Each fixed arc draws behind the needle, then settles into the thin ring.
+        const settled = segmentProgress * segmentProgress * (3 - 2 * segmentProgress);
+        const width = 18 - 13 * settled;
+        return <circle key={index} data-clock-trail-segment={index}
+          cx="320" cy="320" r={168.5 - width / 2}
+          fill="none" stroke={color} strokeWidth={width} strokeLinecap="butt"
+          opacity={.8 - .58 * settled} pathLength="100"
+          strokeDasharray={(segmentProgress * 100 / 12) + ' 100'}
+          transform={'rotate(' + (-90 + index * 30) + ' 320 320)'} />;
+      })}
+      <line data-lens-needle="true" x1="320" y1="320" x2={320 + Math.cos(angle) * 230} y2={320 + Math.sin(angle) * 230} stroke={color} strokeWidth="2.7" />
     </g>;
   }
 
@@ -311,4 +371,37 @@ function MotionGraphic({ feature, progress }: { feature: RoleFeature; progress: 
     {[0, 1, 2].map(index => <line key={index} x1="270" y1={350 + index * 28} x2={270 + (100 - index * 14) * p} y2={350 + index * 28} stroke={color} strokeWidth={index === 0 ? 7 : 4} />)}
     <circle cx="390" cy="420" r={8 + p * 7} fill={color} filter="url(#lens-glow)" />
   </g>;
+}
+
+function GuidePath({ d, color, delay = 0 }: { d: string; color: string; delay?: number }) {
+  return <g fill="none" stroke={color} strokeWidth="2">
+    <path d={d} opacity=".1" />
+    <path d={d} pathLength="100" opacity=".3" data-path-guide="true">
+      <animate attributeName="stroke-dasharray" values="0 100;100 100;0 100" keyTimes="0;.65;1" dur="3.2s" begin={(-delay) + 's'} repeatCount="indefinite" />
+      <animate attributeName="stroke-dashoffset" values="0;0;-100" keyTimes="0;.65;1" dur="3.2s" begin={(-delay) + 's'} repeatCount="indefinite" />
+    </path>
+  </g>;
+}
+
+function HarmonicBalls({ progress, color }: { progress: number; color: string }) {
+  const group = useRef<SVGGElement>(null);
+  useEffect(() => {
+    const balls = group.current?.querySelectorAll('circle');
+    if (!balls) return;
+    let frame = 0;
+    const tick = (time: number) => {
+      balls.forEach((ball, index) => {
+        const wave = Math.sin(time / 2400 * Math.PI * 2 - index * .34) * 42;
+        ball.setAttribute('cx', String(wave * (1 - progress)));
+        ball.setAttribute('cy', String(wave * progress));
+      });
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [progress]);
+  return <g ref={group}>{Array.from({ length: 5 }, (_, index) => {
+    const offset = (index - 2) * 46;
+    return <g key={index} transform={'translate(' + (320 + offset * progress) + ' ' + (320 + offset * (1 - progress)) + ')'}><circle r="17" fill={color} /></g>;
+  })}</g>;
 }

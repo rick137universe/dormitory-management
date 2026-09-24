@@ -1,6 +1,6 @@
 import type { ModuleId, RoleId } from './role-workspaces';
 
-export type MotionKind = 'identity' | 'rooms' | 'battery' | 'workflow' | 'broadcast' | 'data' | 'beds' | 'ledger' | 'record' | 'analytics' | 'rules' | 'dispatch' | 'orderRoute' | 'service' | 'permissions' | 'backup';
+export type MotionKind = 'campus' | 'identity' | 'rooms' | 'battery' | 'workflow' | 'broadcast' | 'data' | 'beds' | 'ledger' | 'record' | 'analytics' | 'rules' | 'dispatch' | 'orderRoute' | 'service' | 'permissions' | 'backup';
 
 export interface FeatureAction {
   id: string;
@@ -28,7 +28,7 @@ export const roleFeatures: Record<RoleId, RoleFeature[]> = {
     feature('announcements', '05', '公告查看', 'BROADCAST', '公寓通知与缴费提醒，沿同一频率抵达。', '#50a8ff', 'broadcast', 'personal', ['公寓通知', '缴费提醒']),
   ],
   dormManager: [
-    feature('base-data', '01', '基础信息', 'BASE DATA', '学生、房间与床位数据保持在同一坐标系。', '#ff4f64', 'data', 'base', ['学生信息', '房间信息', '床位信息']),
+    feature('base-data', '01', '基础信息', 'BASE DATA', '学生、房间与床位数据保持在同一坐标系。', '#ff4f64', 'campus', 'base', ['学生信息', '房间信息', '床位信息']),
     feature('accommodation', '02', '住宿事务', 'RESIDENCE FLOW', '登记、调宿与退宿驱动床位实时变化。', '#ffad24', 'rooms', 'accommodation', ['入住登记与分配', '调宿审核', '退宿登记']),
     feature('beds', '03', '床位状态', 'BED MATRIX', '状态矩阵直接显示空闲、入住与异常。', '#b8ff42', 'beds', 'bed', ['床位总览', '状态更新', '异常校验']),
     feature('repair-review', '04', '报修初审', 'REPAIR REVIEW', '有效工单继续前进，无效信息原路退回。', '#00e7c4', 'workflow', 'repair', ['待初审工单', '上报维修', '驳回报修']),

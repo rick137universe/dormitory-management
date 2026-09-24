@@ -119,13 +119,9 @@ export function RolePortal({ open, loginOnly = false, requestedView, onClose, on
         <div className={s.loginShell}>
           <section className={s.loginBrand}>
             <button className={s.closeLight} onClick={() => dialog.current?.close()} aria-label="关闭登录"><X /></button>
-            <p className={s.kicker}>DORMA / ACCESS CONTROL</p>
             <h2 id="portal-title">进入你的<br />公寓工作台。</h2>
             <p>账号决定你能看到的数据与操作。这里用演示账号模拟基于角色的权限控制。</p>
-            <div className={s.blueprint} aria-hidden="true">
-              <Building2 />
-              <span>04 ROLES</span><span>08 MODULES</span><span>01 SYSTEM</span>
-            </div>
+
           </section>
           <section className={s.loginPanel}>
             <button className={s.closeDark} onClick={() => dialog.current?.close()} aria-label="关闭登录"><X /></button>
