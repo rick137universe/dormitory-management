@@ -1,6 +1,6 @@
 # Output plan
 Source: https://animejs.com/ -> /
-App: D:/03_Workspace/dormitory-management
+App: D:/03_Workspace/student-housing-maintenance-management-system
 Independent copy of untouched ai-website-cloner scaffold. No original source edits.
 Components: src/components/sites/animejs-com-23cc7dc7/root-8a5edab2
 Screenshots: docs/design-references/animejs-com-23cc7dc7/root-8a5edab2

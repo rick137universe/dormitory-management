@@ -21,4 +21,4 @@ const journeyMarkup=`<section ref={journey} className={s.journey} aria-label="æ»
         </div>
       </section>
       `;
-t=t.replace('<ServiceSection onOpen={open} repairCount={records.length}/>',journeyMarkup+'<ServiceSection onOpen={open} repairCount={records.length}/>');fs.writeFileSync(p,t);let pkg=JSON.parse(fs.readFileSync('package.json'));pkg.name='dorma-campus';pkg.description='Anime.js inspired student residence frontend';fs.writeFileSync('package.json',JSON.stringify(pkg,null,2)+'\n');
+t=t.replace('<ServiceSection onOpen={open} repairCount={records.length}/>',journeyMarkup+'<ServiceSection onOpen={open} repairCount={records.length}/>');fs.writeFileSync(p,t);let pkg=JSON.parse(fs.readFileSync('package.json'));pkg.name='student-housing-maintenance-management-system';pkg.description='Anime.js inspired student residence frontend';fs.writeFileSync('package.json',JSON.stringify(pkg,null,2)+'\n');

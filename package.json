@@ -1,5 +1,5 @@
 {
-  "name": "dorma-campus",
+  "name": "student-housing-maintenance-management-system",
   "version": "0.5.0",
   "private": true,
   "description": "Anime.js inspired student residence frontend",
@@ -7,11 +7,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/rick137universe/dormitory-management.git"
+    "url": "https://github.com/rick137universe/student-housing-maintenance-management-system.git"
   },
-  "homepage": "https://github.com/rick137universe/dormitory-management",
+  "homepage": "https://github.com/rick137universe/student-housing-maintenance-management-system",
   "bugs": {
-    "url": "https://github.com/rick137universe/dormitory-management/issues"
+    "url": "https://github.com/rick137universe/student-housing-maintenance-management-system/issues"
   },
   "keywords": [
     "claude-code",
