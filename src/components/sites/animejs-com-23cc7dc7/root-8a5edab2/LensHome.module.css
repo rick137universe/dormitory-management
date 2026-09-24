@@ -148,13 +148,13 @@
 
 /* Direct feature links stay available without scrolling through the lens story. */
 .header .chapterNames{position:static;z-index:auto;left:auto;bottom:auto;transform:none;display:flex;align-items:center;justify-content:flex-end;gap:6px;margin:0 18px 0 auto;min-width:0;pointer-events:auto}
-.header .chapterNames a{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:0 10px;border:1px solid transparent;border-radius:3px;color:#a9a59e;font-size:11px;text-decoration:none;white-space:nowrap;transition:color .18s,background .18s,border-color .18s}
-.header .chapterNames a:hover,.header .chapterNames a:focus-visible{color:#fff;background:#ffffff12}
-.header .chapterNames a[data-active='true']{color:#fff;background:#ffffff18;border-color:#ffffff55;font-weight:700}
+.header .chapterNames a{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:0 10px;border:0;background:transparent;color:#a9a59e;font-size:11px;text-decoration:none;white-space:nowrap;transition:color .18s}
+.header .chapterNames a:hover,.header .chapterNames a:focus-visible{color:#fff}
+.header .chapterNames a[data-active='true']{color:#fff;font-weight:700}
 .header .chapterNames a:focus-visible{outline:2px solid #fff;outline-offset:2px}
 .page[data-theme='light'] .header .chapterNames a{color:#68645f}
-.page[data-theme='light'] .header .chapterNames a:hover,.page[data-theme='light'] .header .chapterNames a:focus-visible{color:#242321;background:#24232112}
-.page[data-theme='light'] .header .chapterNames a[data-active='true']{color:#fff;background:#242321;border-color:#242321}
+.page[data-theme='light'] .header .chapterNames a:hover,.page[data-theme='light'] .header .chapterNames a:focus-visible{color:#242321}
+.page[data-theme='light'] .header .chapterNames a[data-active='true']{color:#242321}
 @media(max-width:1200px){
   .page[data-authenticated='true'] .header{height:112px;flex-wrap:wrap;align-content:center;gap:2px;padding-top:5px;padding-bottom:5px}
   .page[data-authenticated='true'] .header .chapterNames{order:3;flex:0 0 100%;margin:0;justify-content:flex-end;overflow-x:auto;scrollbar-width:none}
