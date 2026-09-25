@@ -4,7 +4,7 @@ Dorma 是面向学生、宿管人员、维修人员和系统管理员的校园�
 
 > **当前阶段：可运行的交互原型。** 页面中的账号、账单、床位、工单和统计指标来自前端模拟数据。部分操作能更新当前页面状态，但没有真实身份认证、业务 API、数据库持久化或支付、备份服务。功能入口数量不代表业务流程已经完成。
 
-本文档依据 2026-09-25 的仓库代码编写，描述当前可从首页进入的版本。`docs/research/` 和 `docs/qa/` 中包含早期设计及测试资料，部分对应旧版 3D 公寓首页，不宜直接作为当前版本的验收依据。
+本文档依据 2026-09-25 的仓库代码编写，描述当前可从首页进入的版本。早期设计、旧版组件和一次性脚本集中在 `docs/legacy/`；它们不参与当前应用构建。早期 QA 截图保留在 Git 历史中，新的本地 QA 产物放在被忽略的 `docs/qa/`。
 
 ## 本地运行与检查
 
@@ -82,19 +82,19 @@ src/
 ├─ lib/
 │  ├─ role-experiences.ts                           角色功能、操作 ID 和动画配置
 │  ├─ role-workspaces.ts                            演示账号、指标与工作台数据
-│  ├─ demo-session.ts                               演示身份的会话存取
-│  └─ mock-campus.ts                                早期模拟数据
-└─ components/sites/animejs-com-23cc7dc7/root-8a5edab2/
-   ├─ HomePage.tsx                                  当前首页、导航和跳转
-   ├─ LensExperience.tsx / LensMotionDetails.tsx    当前 SVG 镜头与动画
-   ├─ RolePortal.tsx                                登录弹窗
-   ├─ WorkspaceRoute.tsx                            路由解析与演示角色拦截
-   ├─ ActionWorkspace.tsx                           通用表单、列表和模拟操作
-   ├─ RepairWorkspace.tsx                           学生报修交互
-   └─ MaintenanceWorkspace.tsx                      维修人员工单交互
+│  └─ demo-session.ts                               演示身份的会话存取
+└─ components/dorma/
+   ├─ home/                                         首页、角色导航与 SVG 镜头
+   │  └─ HomePage.tsx
+   └─ workspace/                                    登录及各角色的业务详情
+      ├─ RolePortal.tsx                             登录弹窗
+      ├─ WorkspaceRoute.tsx                         路由解析与演示角色拦截
+      ├─ ActionWorkspace.tsx                        通用表单、列表和模拟操作
+      ├─ RepairWorkspace.tsx                        学生报修交互
+      └─ MaintenanceWorkspace.tsx                   维修人员工单交互
 ```
 
-当前首页以 `RolePortal` 的登录模式使用弹窗；该组件中保留的旧版工作台页面不是当前登录后的主要操作入口。`ContinuousResidence.tsx`、`ResidenceEngine.tsx` 等旧版 3D 公寓组件也仍在仓库中，但当前首页没有引用它们。阅读代码时应先从 `src/app/page.tsx`、`HomePage.tsx` 和 `WorkspaceRoute.tsx` 沿实际引用关系进入。
+当前首页以 `RolePortal` 的登录模式使用弹窗；该组件中保留的旧版工作台页面不是当前登录后的主要操作入口。`ContinuousResidence.tsx`、`ResidenceEngine.tsx` 等旧版 3D 公寓组件已归入 `docs/legacy/ui/`。阅读当前代码时，应先从 `src/app/page.tsx`、`home/HomePage.tsx` 和 `workspace/WorkspaceRoute.tsx` 沿实际引用关系进入。
 
 项目主要使用 Next.js 16.3.5、React 19.2.4、TypeScript、Tailwind CSS 4 和 CSS Modules。仓库仍保留早期方案所需的 Anime.js、Three.js 等依赖；不能仅凭依赖列表判断它们参与了当前首页渲染。
 
@@ -105,6 +105,6 @@ src/
 - **状态流转：** 需统一住宿申请、床位、报修工单和账单的状态定义，并确定每个角色的可执行操作及操作后的数据变化。
 - **外部服务：** 在线缴费、消息催缴、批量导入、真实派工、备份恢复尚未接入相应服务。CSV 导出仅下载前端演示数据。
 - **生产启动配置：** `package.json` 中的 `start` 脚本与 `next.config.ts` 的 standalone 输出不一致，后续应统一部署方式并验证生产启动。
-- **测试与文档：** `docs/qa/` 的早期截图和结果主要覆盖旧版页面；部分 `scripts/qa*.cjs` 含作者机器上的绝对 Playwright 路径与旧版页面选择器。当前版本尚缺可跨机器运行的完整业务验收测试，以及接口、字段、权限和状态流转文档。
+- **测试与文档：** `docs/legacy/scripts/` 中的早期 QA 脚本含作者机器上的绝对 Playwright 路径与旧版页面选择器，已归档且不作为当前验收命令。`docs/qa/` 用于本地生成的截图和结果，已从 Git 跟踪中移除。当前版本尚缺可跨机器运行的完整业务验收测试，以及接口、字段、权限和状态流转文档。
 
 协作时，先以 `src/lib/role-experiences.ts` 作为当前菜单与路径的入口清单；修改功能 ID 或操作 ID 时同步检查详情页链接。新增业务数据和接口前，建议先约定各角色共用的记录 ID、状态、字段及更新规则，再逐条打通业务链路。提交前运行 `npm run check`；若改动了交互或样式，还需按实际入口在浏览器复核。

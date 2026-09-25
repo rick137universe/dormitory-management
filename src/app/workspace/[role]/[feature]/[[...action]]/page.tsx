@@ -1,4 +1,4 @@
-import { WorkspaceRoute } from '@/components/sites/animejs-com-23cc7dc7/root-8a5edab2/WorkspaceRoute';
+import { WorkspaceRoute } from '@/components/dorma/workspace/WorkspaceRoute';
 
 export default function WorkspacePage() {
   return <WorkspaceRoute />;

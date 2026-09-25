@@ -3,47 +3,49 @@ node_modules/
 .pnp
 .pnp.js
 
-# Build
+# Build outputs and caches
 .next/
 out/
 build/
 dist/
+.turbo/
+.cache/
+.eslintcache
+*.tsbuildinfo
+next-env.d.ts
 
-# Environment
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# Local environment and secrets; templates may be committed
+.env*
+!.env.example
+!.env.sample
 
-# Debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# IDE
-.idea/
-.vscode/
+# Logs and temporary files
+*.log
+*.log.*
+temp/
+tmp/
 *.swp
 *.swo
+
+# Local editor and agent settings
+.idea/
+.vscode/
+.claude/
+.codex/
+.agents/
 
 # OS
 .DS_Store
 Thumbs.db
 
-# TypeScript
-*.tsbuildinfo
-next-env.d.ts
-
-# Vercel
+# Deployment tooling
 .vercel
 
-# Local settings (not project config)
-.claude/settings.local.json
-
-# User-specific skills (not part of the template)
-.claude/skills/customize/
-.claude/skills/release/
-
-# Local temp files
-temp/
+# Generated test reports, screenshots, and traces
+coverage/
+test-results/
+playwright-report/
+blob-report/
+docs/qa/
+*.trace
+*.har

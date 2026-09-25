@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { ArrowDown, ArrowRight, LogOut, SunMoon } from 'lucide-react';
 import { LensExperience } from './LensExperience';
 import { LensBootIntro } from './LensBootIntro';
-import { RolePortal } from './RolePortal';
+import { RolePortal } from '../workspace/RolePortal';
 import { readDemoSession, saveDemoSession } from '@/lib/demo-session';
 import { roleFeatures, type RoleFeature } from '@/lib/role-experiences';
 import type { DemoAccount } from '@/lib/role-workspaces';
