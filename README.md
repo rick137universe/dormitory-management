@@ -6,6 +6,19 @@ Dorma 是面向学生、宿管人员、维修人员和系统管理员的校园�
 
 本文档依据 2026-09-25 的仓库代码编写，描述当前可从首页进入的版本。早期设计、旧版组件和一次性脚本集中在 `archive/`；它们不参与当前应用构建。早期 QA 截图保留在 Git 历史中，新的本地 QA 产物放在被忽略的 `docs/qa/`。
 
+## 开发语言与技术栈
+
+| 类别 | 当前使用情况 |
+| --- | --- |
+| TypeScript / TSX | 主要开发语言；用于 Next.js 页面、React 组件、演示数据、类型定义和 `next.config.ts`。 |
+| CSS | `src/app/globals.css` 提供全局样式；各功能目录中的 `*.module.css` 提供组件级样式。 |
+| JavaScript / JSON | `.mjs` 文件配置 ESLint 和 PostCSS；`package.json`、`tsconfig.json` 等管理依赖和工具配置。应用主体没有独立的 JavaScript 页面。 |
+| HTML / SVG | 页面元素通过 TSX 中的 JSX 渲染；首页镜头的 SVG 图形直接写在 React 组件中。 |
+
+当前应用基于 **Next.js 16.3.5（App Router）**、**React 19.2.4** 和 **TypeScript 5**。样式主要使用 CSS Modules，并通过 PostCSS 接入 **Tailwind CSS 4**；界面图标使用 **Lucide React**。首页滚动镜头使用原生 SVG、CSS 动画、`requestAnimationFrame` 和 `IntersectionObserver`。演示登录使用浏览器 `sessionStorage`，主题选择使用 `localStorage`。
+
+仓库还配置了 shadcn 组件生成器，并保留一个基于 Base UI 的按钮组件；当前业务页面未引用该按钮。`package.json` 中的 **Anime.js**、**Three.js** 等依赖来自早期方案，当前 `src/` 中没有对应的运行时导入，不能将它们视为现行页面的动画或 3D 引擎。项目目前只有前端演示代码，没有后端服务、数据库或正式 API 集成。开发环境要求 Node.js 24 或以上，使用 npm 和 `package-lock.json` 管理依赖；ESLint、TypeScript 类型检查与 Next.js 构建用于代码验证。
+
 ## 本地运行与检查
 
 需要 Node.js 24 或以上，依赖版本由 `package-lock.json` 锁定。
@@ -103,8 +116,6 @@ archive/                                           不参与当前构建的旧�
 当前首页以 `RolePortal` 的登录模式使用弹窗；该组件中保留的旧版工作台页面不是当前登录后的主要操作入口。`ContinuousResidence.tsx`、`ResidenceEngine.tsx` 等旧版 3D 公寓组件已归入 `archive/ui/`。阅读当前代码时，应先从 `src/app/page.tsx`、`src/features/home/HomePage.tsx` 和 `src/features/workspace/WorkspaceRoute.tsx` 沿实际引用关系进入。
 
 仓库一级目录只保留应用源码、公共资源、当前文档、历史归档和构建工具要求的配置文件。`package.json`、锁文件、Next.js / TypeScript / ESLint 配置及 `AGENTS.md` 等需要留在仓库根目录，避免改变工具默认发现规则；`src/app/` 中的路由目录层级对应实际 URL，也不能为减少嵌套而随意压平。`src/components/ui/` 与 `src/lib/utils.ts` 保持现有位置，以兼容 `components.json` 的组件生成别名。
-
-项目主要使用 Next.js 16.3.5、React 19.2.4、TypeScript、Tailwind CSS 4 和 CSS Modules。仓库仍保留早期方案所需的 Anime.js、Three.js 等依赖；不能仅凭依赖列表判断它们参与了当前首页渲染。
 
 ## 已知边界与后续对接
 
