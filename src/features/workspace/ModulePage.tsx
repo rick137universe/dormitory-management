@@ -1,7 +1,7 @@
 'use client';
 
 import { ArrowLeft, ArrowRight, CheckCircle2, Filter, Plus, Search } from 'lucide-react';
-import { moduleCatalog, type ModuleId, type RoleId } from '@/lib/role-workspaces';
+import { moduleCatalog, type ModuleId, type RoleId } from '@/demo/workspace-data';
 import s from './RolePortal.module.css';
 
 interface Props {

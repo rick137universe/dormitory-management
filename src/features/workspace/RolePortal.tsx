@@ -11,7 +11,7 @@ import {
 import {
   demoAccounts, moduleCatalog, roleWorkspace,
   type DemoAccount, type ModuleId,
-} from '@/lib/role-workspaces';
+} from '@/demo/workspace-data';
 import { ModulePage } from './ModulePage';
 import s from './RolePortal.module.css';
 

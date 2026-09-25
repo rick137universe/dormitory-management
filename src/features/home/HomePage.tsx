@@ -7,11 +7,11 @@ import { ArrowDown, ArrowRight, LogOut, SunMoon } from 'lucide-react';
 import { LensExperience } from './LensExperience';
 import { LensBootIntro } from './LensBootIntro';
 import { RolePortal } from '../workspace/RolePortal';
-import { readDemoSession, saveDemoSession } from '@/lib/demo-session';
-import { roleFeatures, type RoleFeature } from '@/lib/role-experiences';
-import type { DemoAccount } from '@/lib/role-workspaces';
-import h from './LensHome.module.css';
-import { useTheme } from '@/components/ThemeProvider';
+import { readDemoSession, saveDemoSession } from '@/demo/session';
+import { roleFeatures, type RoleFeature } from '@/demo/role-features';
+import type { DemoAccount } from '@/demo/workspace-data';
+import h from './HomePage.module.css';
+import { useTheme } from '@/providers/ThemeProvider';
 
 export function HomePage() {
   const router = useRouter();

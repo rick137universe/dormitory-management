@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { ContentSwap } from './ContentSwap';
-import s from './RepairWorkspace.module.css';
+import s from './BusinessPanel.module.css';
 export function RepairWorkspace({ actionId }: { actionId: string }) {
   const [submitted, setSubmitted] = useState(false);
   const [rating, setRating] = useState(5);

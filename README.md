@@ -4,7 +4,7 @@ Dorma 是面向学生、宿管人员、维修人员和系统管理员的校园�
 
 > **当前阶段：可运行的交互原型。** 页面中的账号、账单、床位、工单和统计指标来自前端模拟数据。部分操作能更新当前页面状态，但没有真实身份认证、业务 API、数据库持久化或支付、备份服务。功能入口数量不代表业务流程已经完成。
 
-本文档依据 2026-09-25 的仓库代码编写，描述当前可从首页进入的版本。早期设计、旧版组件和一次性脚本集中在 `docs/legacy/`；它们不参与当前应用构建。早期 QA 截图保留在 Git 历史中，新的本地 QA 产物放在被忽略的 `docs/qa/`。
+本文档依据 2026-09-25 的仓库代码编写，描述当前可从首页进入的版本。早期设计、旧版组件和一次性脚本集中在 `archive/`；它们不参与当前应用构建。早期 QA 截图保留在 Git 历史中，新的本地 QA 产物放在被忽略的 `docs/qa/`。
 
 ## 本地运行与检查
 
@@ -75,36 +75,44 @@ npm run check
 
 ```text
 src/
-├─ app/
-│  ├─ page.tsx                                      首页入口
-│  ├─ layout.tsx                                    全局布局与主题
+├─ app/                                             Next.js 路由、全局样式和图标
 │  └─ workspace/[role]/[feature]/[[...action]]/      业务详情路由
-├─ lib/
-│  ├─ role-experiences.ts                           角色功能、操作 ID 和动画配置
-│  ├─ role-workspaces.ts                            演示账号、指标与工作台数据
-│  └─ demo-session.ts                               演示身份的会话存取
-└─ components/dorma/
-   ├─ home/                                         首页、角色导航与 SVG 镜头
-   │  └─ HomePage.tsx
-   └─ workspace/                                    登录及各角色的业务详情
-      ├─ RolePortal.tsx                             登录弹窗
-      ├─ WorkspaceRoute.tsx                         路由解析与演示角色拦截
-      ├─ ActionWorkspace.tsx                        通用表单、列表和模拟操作
-      ├─ RepairWorkspace.tsx                        学生报修交互
-      └─ MaintenanceWorkspace.tsx                   维修人员工单交互
+├─ features/
+│  ├─ home/                                         首页、角色导航与 SVG 镜头
+│  │  └─ HomePage.tsx
+│  └─ workspace/                                    登录、路由与业务详情外壳
+│     ├─ RolePortal.tsx                             登录弹窗及旧工作台展示
+│     ├─ WorkspaceRoute.tsx                         路由解析与演示角色拦截
+│     ├─ ModulePage.tsx                             通用模拟业务内容
+│     └─ actions/                                   各类操作页及共用样式
+│        ├─ ActionWorkspace.tsx                     通用表单与列表
+│        ├─ RepairWorkspace.tsx                     学生报修交互
+│        └─ MaintenanceWorkspace.tsx                维修人员工单交互
+├─ demo/                                            前端演示数据与会话
+│  ├─ role-features.ts                              角色功能、操作 ID 和动画配置
+│  ├─ workspace-data.ts                             演示账号、指标与工作台数据
+│  └─ session.ts                                    演示身份的会话存取
+├─ providers/ThemeProvider.tsx                      全局主题状态与控件
+├─ components/ui/                                   可复用 UI 基础组件
+└─ lib/utils.ts                                     UI 组件使用的通用工具
+
+docs/requirements-map.md                           需求与页面映射
+archive/                                           不参与当前构建的旧原型与脚本
 ```
 
-当前首页以 `RolePortal` 的登录模式使用弹窗；该组件中保留的旧版工作台页面不是当前登录后的主要操作入口。`ContinuousResidence.tsx`、`ResidenceEngine.tsx` 等旧版 3D 公寓组件已归入 `docs/legacy/ui/`。阅读当前代码时，应先从 `src/app/page.tsx`、`home/HomePage.tsx` 和 `workspace/WorkspaceRoute.tsx` 沿实际引用关系进入。
+当前首页以 `RolePortal` 的登录模式使用弹窗；该组件中保留的旧版工作台页面不是当前登录后的主要操作入口。`ContinuousResidence.tsx`、`ResidenceEngine.tsx` 等旧版 3D 公寓组件已归入 `archive/ui/`。阅读当前代码时，应先从 `src/app/page.tsx`、`src/features/home/HomePage.tsx` 和 `src/features/workspace/WorkspaceRoute.tsx` 沿实际引用关系进入。
+
+仓库一级目录只保留应用源码、公共资源、当前文档、历史归档和构建工具要求的配置文件。`package.json`、锁文件、Next.js / TypeScript / ESLint 配置及 `AGENTS.md` 等需要留在仓库根目录，避免改变工具默认发现规则；`src/app/` 中的路由目录层级对应实际 URL，也不能为减少嵌套而随意压平。`src/components/ui/` 与 `src/lib/utils.ts` 保持现有位置，以兼容 `components.json` 的组件生成别名。
 
 项目主要使用 Next.js 16.3.5、React 19.2.4、TypeScript、Tailwind CSS 4 和 CSS Modules。仓库仍保留早期方案所需的 Anime.js、Three.js 等依赖；不能仅凭依赖列表判断它们参与了当前首页渲染。
 
 ## 已知边界与后续对接
 
 - **认证与授权：** 账号密码硬编码在前端，`sessionStorage` 只保存角色标识。正式系统需要后端认证、会话管理和服务端数据权限校验。
-- **业务数据：** 当前列表、指标和部分时间线由 `role-workspaces.ts`、`ModulePage.tsx`、`ActionWorkspace.tsx` 及各业务组件内的固定数据提供；页面修改大多不会持久化。
+- **业务数据：** 当前列表、指标和部分时间线由 `src/demo/workspace-data.ts`、`ModulePage.tsx`、`ActionWorkspace.tsx` 及各业务组件内的固定数据提供；页面修改大多不会持久化。
 - **状态流转：** 需统一住宿申请、床位、报修工单和账单的状态定义，并确定每个角色的可执行操作及操作后的数据变化。
 - **外部服务：** 在线缴费、消息催缴、批量导入、真实派工、备份恢复尚未接入相应服务。CSV 导出仅下载前端演示数据。
 - **生产启动配置：** `package.json` 中的 `start` 脚本与 `next.config.ts` 的 standalone 输出不一致，后续应统一部署方式并验证生产启动。
-- **测试与文档：** `docs/legacy/scripts/` 中的早期 QA 脚本含作者机器上的绝对 Playwright 路径与旧版页面选择器，已归档且不作为当前验收命令。`docs/qa/` 用于本地生成的截图和结果，已从 Git 跟踪中移除。当前版本尚缺可跨机器运行的完整业务验收测试，以及接口、字段、权限和状态流转文档。
+- **测试与文档：** `archive/scripts/` 中的早期 QA 脚本含作者机器上的绝对 Playwright 路径与旧版页面选择器，已归档且不作为当前验收命令。`docs/qa/` 用于本地生成的截图和结果，已从 Git 跟踪中移除。当前版本尚缺可跨机器运行的完整业务验收测试，以及接口、字段、权限和状态流转文档。
 
-协作时，先以 `src/lib/role-experiences.ts` 作为当前菜单与路径的入口清单；修改功能 ID 或操作 ID 时同步检查详情页链接。新增业务数据和接口前，建议先约定各角色共用的记录 ID、状态、字段及更新规则，再逐条打通业务链路。提交前运行 `npm run check`；若改动了交互或样式，还需按实际入口在浏览器复核。
+协作时，先以 `src/demo/role-features.ts` 作为当前菜单与路径的入口清单；修改功能 ID 或操作 ID 时同步检查详情页链接。新增业务数据和接口前，建议先约定各角色共用的记录 ID、状态、字段及更新规则，再逐条打通业务链路。提交前运行 `npm run check`；若改动了交互或样式，还需按实际入口在浏览器复核。

@@ -4,15 +4,15 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Check, LogOut, ShieldAlert, X } from 'lucide-react';
-import { ActionWorkspace } from './ActionWorkspace';
-import { MaintenanceWorkspace } from './MaintenanceWorkspace';
-import { RepairWorkspace } from './RepairWorkspace';
-import { readDemoSession, saveDemoSession } from '@/lib/demo-session';
-import { featureFor, roleFeatures } from '@/lib/role-experiences';
-import { demoAccounts, type DemoAccount, type RoleId } from '@/lib/role-workspaces';
+import { ActionWorkspace } from './actions/ActionWorkspace';
+import { MaintenanceWorkspace } from './actions/MaintenanceWorkspace';
+import { RepairWorkspace } from './actions/RepairWorkspace';
+import { readDemoSession, saveDemoSession } from '@/demo/session';
+import { featureFor, roleFeatures } from '@/demo/role-features';
+import { demoAccounts, type DemoAccount, type RoleId } from '@/demo/workspace-data';
 import portal from './RolePortal.module.css';
 import s from './WorkspaceRoute.module.css';
-import { ThemeSelect } from '@/components/ThemeProvider';
+import { ThemeSelect } from '@/providers/ThemeProvider';
 
 const validRoles: RoleId[] = ['student', 'dormManager', 'maintenance', 'admin'];
 

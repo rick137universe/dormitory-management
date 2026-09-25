@@ -1,4 +1,4 @@
-import { WorkspaceRoute } from '@/components/dorma/workspace/WorkspaceRoute';
+import { WorkspaceRoute } from '@/features/workspace/WorkspaceRoute';
 
 export default function WorkspacePage() {
   return <WorkspaceRoute />;

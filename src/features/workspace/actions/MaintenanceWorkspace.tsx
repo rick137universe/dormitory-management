@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { ContentSwap } from './ContentSwap';
-import s from './RepairWorkspace.module.css';
+import s from './BusinessPanel.module.css';
 
 type Order = { id: string; location: string; issue: string; status: string; note: string };
 const initialOrders: Order[] = [

@@ -1,10 +1,10 @@
 'use client';
 import { useState } from 'react';
-import type { RoleFeature } from '@/lib/role-experiences';
-import type { RoleId } from '@/lib/role-workspaces';
-import { modulePage } from './ModulePage';
+import type { RoleFeature } from '@/demo/role-features';
+import type { RoleId } from '@/demo/workspace-data';
+import { modulePage } from '../ModulePage';
 import { ContentSwap } from './ContentSwap';
-import s from './RepairWorkspace.module.css';
+import s from './BusinessPanel.module.css';
 
 type Field = { label: string; type?: string; options?: string[] };
 const forms: Record<string, Field[]> = {

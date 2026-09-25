@@ -1,6 +1,6 @@
 # 早期原型资料
 
-此目录保存当前 Dorma 页面之前的设计参考和实验实现，便于追溯设计过程。当前应用代码位于 `src/components/dorma/home/` 和 `src/components/dorma/workspace/`，本目录不参与构建和日常验证。
+此目录保存当前 Dorma 页面之前的设计参考和实验实现，便于追溯设计过程。当前应用代码位于 `src/features/home/` 和 `src/features/workspace/`，本目录不参与构建和日常验证。
 
 | 目录 | 内容 |
 | --- | --- |

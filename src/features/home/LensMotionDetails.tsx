@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { referenceRoute } from './referenceRoute';
-import { spherePaths } from './referenceSphere';
+import { referenceRoute } from './routePath';
+import { spherePaths } from './spherePaths';
 
 const waveDots = Array.from({ length: 225 }, (_, i) => ({ x: i % 15 - 7, y: Math.floor(i / 15) - 7 })).filter(dot => Math.hypot(dot.x, dot.y) <= 7.3);
 const smoothStep = (value: number) => { const t = Math.max(0, Math.min(1, value)); return t * t * (3 - 2 * t); };
