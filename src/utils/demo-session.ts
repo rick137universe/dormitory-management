@@ -1,4 +1,4 @@
-import { demoAccounts, type DemoAccount, type RoleId } from './accounts';
+import { demoAccounts, type DemoAccount, type RoleId } from '@/data/accounts';
 
 export const SESSION_KEY = 'dorma-demo-session';
 

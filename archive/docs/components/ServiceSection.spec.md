@@ -7,5 +7,5 @@ Structure: section id=services. eyebrow 01 / CAMPUS SERVICES. heading 你的日�
 Container max-width 1280px margin auto padding 88px 40px. Cards transparent background, border-top 1px #45433f, 32px inner padding, min-height 285px; hover lightly tinted background transition 180ms. Heading 28px, body 14px/1.7. Accent colors #ff7167 / #d1ed83 / #b5a1ff. On click invoke prop. Avoid nested button.
 Second section id=notices, top border, flex layout label 公寓公告, two horizontal notice rows date 09.21 and 09.18, titles 南苑 3 栋供水维护通知 and 秋季宿舍用电安全提醒. Click opens corresponding notice dialog.
 Responsive: <=760px single column cards and notices, 24px padding; <=1100px heading 34px.
-Interaction model click-driven, cards hover. No remote images: original Lucide icons and CSS lines appropriate for customized business. Use lucide-react ArrowUpRight, Building2, Wrench, Wallet. Screenshot source at docs/design-references/animejs-com-23cc7dc7/root-8a5edab2/source-desktop.png (inspiration, not identical content).
+Interaction model click-driven, cards hover. No remote images: original Lucide icons and CSS lines appropriate for customized business. Use lucide-react ArrowUpRight, Building2, Wrench, Wallet. Screenshot source at [source-desktop.png](../../assets/images/reference/source-desktop.png) (inspiration, not identical content).
 Validate npx tsc --noEmit before completion.

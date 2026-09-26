@@ -1,6 +1,6 @@
 'use client';
 
-import type { RoleFeature } from '@/demo/role-features';
+import type { RoleFeature } from '@/data/role-features';
 import s from './LensBootIntro.module.css';
 
 const clamp = (value: number) => Math.max(0, Math.min(1, value));

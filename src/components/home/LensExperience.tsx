@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import type { RoleFeature } from '@/demo/role-features';
+import type { RoleFeature } from '@/data/role-features';
 import s from './LensExperience.module.css';
 import { DotWave, HologramRoute, ClockTicks, FloatingShapes, CampusNetwork, ServiceAssembly, RepairScrollLines } from './LensMotionDetails';
 

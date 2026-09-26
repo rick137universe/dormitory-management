@@ -1,12 +1,17 @@
 # 早期原型资料
 
-此目录保存当前 Dorma 页面之前的设计参考和实验实现，便于追溯设计过程。当前应用代码位于 `src/features/home/` 和 `src/features/workspace/`，本目录不参与构建和日常验证。
+此目录保存历史设计参考和实验实现，不参与当前应用构建和日常验证。当前页面主体位于仓库的 `src/views/`，界面组件位于 `src/components/`。
 
 | 目录 | 内容 |
 | --- | --- |
-| `design-references/` | 早期参考页面截图 |
-| `research/` | 早期提取结果、设计说明和 3D 公寓方案 |
-| `ui/` | 当前页面已不再引用的旧版 3D 公寓、工作台组件、样式及模拟数据 |
-| `scripts/` | 早期生成、修补和 QA 一次性脚本 |
+| [src/](src/) | 旧版 3D 公寓、工作台组件、样式及模拟数据 |
+| [docs/](docs/) | 早期提取结果、设计说明、输出计划和第二版方案 |
+| [scripts/](scripts/) | 历史生成、修补和 QA 一次性脚本 |
+| [assets/images/reference/](assets/images/reference/) | 六张原参考截图及 source-hero.jpg、source-ready.jpg |
+| [assets/images/revision-2/](assets/images/revision-2/) | 第二版设计的八张截图 |
 
-`ui/RolePortal.tsx`、`ui/ModulePage.tsx` 和 `ui/workspace-data.ts` 保留旧版工作台的原始文件；现用登录与业务模拟数据已分别位于 `src/features/auth/`、`src/demo/`。归档文件保留历史引用路径，不作为可运行代码。`output-plan.json` 及脚本中还包含开发者机器上的绝对路径，仅用于历史参考。不要在当前代码上直接运行这些脚本。旧 QA 截图和结果可以从 Git 历史查看；新生成的 `docs/qa/` 内容不纳入版本控制。
+`src/RolePortal.tsx`、`src/ModulePage.tsx` 和 `src/workspace-data.ts` 保存旧版工作台；现用登录组件与模拟数据分别位于仓库的 `src/components/auth/`、`src/data/`。
+
+归档源码和脚本保留历史导入及作者机器上的绝对路径，不作为可运行工具，不要在当前代码上直接运行。`docs/output-plan.json` 的本地资料位置已更新，但其中原始开发环境信息仍仅用于历史参考。文档中的历史实现描述不代表当前功能。
+
+归档图片集中在本目录的 `assets/images/`，不会作为网站公开资源。旧 QA 结果可以从 Git 历史查看；新生成的截图、脚本和结果放在仓库被忽略的 `docs/qa/`。

@@ -1,8 +1,8 @@
 'use client';
 import { useState } from 'react';
-import type { RoleFeature } from '@/demo/role-features';
-import type { RoleId } from '@/demo/accounts';
-import { getModuleContent } from '@/demo/module-content';
+import type { RoleFeature } from '@/data/role-features';
+import type { RoleId } from '@/data/accounts';
+import { getModuleContent } from '@/data/module-content';
 import { ContentSwap } from './ContentSwap';
 import s from './BusinessPanel.module.css';
 

@@ -1,5 +1,5 @@
-import { WorkspaceRoute } from '@/features/workspace/WorkspaceRoute';
+import { WorkspacePage } from '@/views/workspace/WorkspacePage';
 
-export default function WorkspacePage() {
-  return <WorkspaceRoute />;
+export default function Page() {
+  return <WorkspacePage />;
 }

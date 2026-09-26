@@ -4,14 +4,14 @@ Dorma 是面向学生、宿管人员、维修人员和系统管理员的校园�
 
 > **当前阶段：可运行的交互原型。** 页面中的账号、账单、床位、工单和统计指标来自前端模拟数据。部分操作能更新当前页面状态，但没有真实身份认证、业务 API、数据库持久化或支付、备份服务。功能入口数量不代表业务流程已经完成。
 
-本文档依据 2026-09-25 的仓库代码编写，描述当前可从首页进入的版本。早期设计、旧版组件和一次性脚本集中在 `archive/`；它们不参与当前应用构建。早期 QA 截图保留在 Git 历史中，新的本地 QA 产物放在被忽略的 `docs/qa/`。
+本文档依据 2026-09-26 的仓库代码编写，描述当前可从首页进入的版本。早期设计、旧版组件和一次性脚本集中在 `archive/`；它们不参与当前应用构建。早期 QA 截图保留在 Git 历史中，新的本地 QA 产物放在被忽略的 `docs/qa/`。
 
 ## 开发语言与技术栈
 
 | 类别 | 当前使用情况 |
 | --- | --- |
 | TypeScript / TSX | 主要开发语言；用于 Next.js 页面、React 组件、演示数据、类型定义和 `next.config.ts`。 |
-| CSS | `src/app/globals.css` 提供全局样式；各功能目录中的 `*.module.css` 提供组件级样式。 |
+| CSS | `src/styles/globals.css` 提供全局样式；各功能目录中的 `*.module.css` 提供组件级样式。 |
 | JavaScript / JSON | `.mjs` 文件配置 ESLint 和 PostCSS；`package.json`、`tsconfig.json` 等管理依赖和工具配置。应用主体没有独立的 JavaScript 页面。 |
 | HTML / SVG | 页面元素通过 TSX 中的 JSX 渲染；首页镜头的 SVG 图形直接写在 React 组件中。 |
 
@@ -36,7 +36,7 @@ npm run check
 
 该命令依次执行 ESLint、TypeScript 类型检查和 Next.js 生产构建。也可分别运行 `npm run lint`、`npm run typecheck`、`npm run build`。当前 `next.config.ts` 启用了 `output: "standalone"`，但 `npm run start` 仍调用 `next start`，运行时会出现不兼容提示；生产部署应使用构建生成的 `.next/standalone/server.js`，并按 Next.js 的 standalone 部署说明提供静态资源。
 
-截至本文档更新时，`npm run check` 已通过；首页登录、学生缴费页面、宿管报修初审页面及跨角色地址拦截经过浏览器抽查。这些检查不等于所有操作入口和完整业务链路都已通过端到端验收。
+本次目录整理后，`npm run check` 已通过。桌面（1440 × 1000）和手机（390 × 844）尺寸下，首页、登录弹层和缴费页面在浅色、深色主题中的 12 组迁移前后截图一致（对照时减少动画）。四类身份的登录、退出、详情页签切换、主题切换和跨角色访问拦截均已验证；代表性操作覆盖模拟缴费、工单列表搜索、维修接单和模拟备份。字体与 favicon 请求正常，17 个迁移资源文件的内容校验值一致。这些检查不等于所有操作入口和完整业务链路都已通过端到端验收。
 
 ## 如何体验当前版本
 
@@ -84,47 +84,71 @@ npm run check
 
 一些局部交互也尚未共享状态：学生点击「确认模拟缴费」后，该页面显示「已缴清」，但「本月待缴」指标和「缴费记录」仍展示原来的模拟数据。后续对接需要明确统一的数据来源和操作后的刷新规则。
 
-## 项目结构
+## 项目结构与文件定位
+
+源码按文件职责分类，以路由、页面、组件、数据、工具、样式为入口。`app/` 遵循 Next.js App Router 约定；其余分类是本项目的维护约定，并非框架强制结构。
 
 ```text
-src/
-├─ app/                                             Next.js 路由、全局样式和图标
-│  └─ workspace/[role]/[feature]/[[...action]]/      业务详情路由
-├─ features/
-│  ├─ auth/                                         当前使用的登录弹层及样式
-│  │  └─ LoginDialog.tsx
-│  ├─ home/                                         首页、角色导航与 SVG 镜头
-│  │  └─ HomePage.tsx
-│  └─ workspace/                                    路由与业务详情外壳
-│     ├─ WorkspaceRoute.tsx                         路由解析与演示角色拦截
-│     └─ actions/                                   各类操作页及共用样式
-│        ├─ ActionWorkspace.tsx                     通用表单与列表
-│        ├─ RepairWorkspace.tsx                     学生报修交互
-│        └─ MaintenanceWorkspace.tsx                维修人员工单交互
-├─ demo/                                            前端演示数据与会话
-│  ├─ accounts.ts                                   演示账号和角色类型
-│  ├─ role-features.ts                              角色功能、操作 ID 和动画配置
-│  ├─ module-content.ts                             业务页面使用的模拟内容
-│  └─ session.ts                                    演示身份的会话存取
-├─ providers/ThemeProvider.tsx                      全局主题状态与控件
-├─ components/ui/                                   可复用 UI 基础组件
-└─ lib/utils.ts                                     UI 组件使用的通用工具
-
-docs/requirements-map.md                           需求与页面映射
-archive/                                           不参与当前构建的旧原型与脚本
+项目根目录/
+├─ src/
+│  ├─ app/                     路由入口、根布局与 favicon.ico
+│  │  └─ workspace/[role]/[feature]/[[...action]]/
+│  ├─ views/                   页面主体，组合组件与页面状态
+│  │  ├─ home/                 HomePage.tsx 及页面样式
+│  │  └─ workspace/            WorkspacePage.tsx 及页面样式
+│  ├─ components/              界面组件及紧邻组件的 CSS Modules
+│  │  ├─ auth/                 LoginDialog 登录弹层
+│  │  ├─ home/                 Lens 系列镜头与动画组件
+│  │  ├─ workspace/            业务表单、列表、切换组件及共用样式
+│  │  ├─ theme/                ThemeProvider、useTheme、ThemeSelect
+│  │  └─ ui/                   shadcn 基础组件
+│  ├─ data/                    演示账号、模拟内容、角色菜单
+│  │  └─ graphics/             route-path.ts、sphere-paths.ts
+│  ├─ utils/                   demo-session.ts、class-names.ts
+│  └─ styles/                  globals.css 全局样式
+├─ public/assets/fonts/        当前网站字体
+├─ docs/                       当前文档，requirements-map.md 为需求映射
+├─ archive/                    历史资料，不参与当前应用构建
+│  ├─ README.md                归档索引及使用边界
+│  ├─ src/                     历史原型源码
+│  ├─ docs/                    历史研究、设计说明与 output-plan.json
+│  ├─ scripts/                 历史一次性脚本
+│  └─ assets/images/
+│     ├─ reference/            原参考截图
+│     └─ revision-2/           第二版设计截图
+├─ README.md
+└─ 标准工具配置文件
 ```
 
-首页调用 `src/features/auth/LoginDialog.tsx` 登录弹层；旧版 `RolePortal.tsx` 工作台、`ModulePage.tsx` 页面组件及其旧数据和样式已归入 `archive/ui/`，不参与当前构建。`ContinuousResidence.tsx`、`ResidenceEngine.tsx` 等旧版 3D 公寓组件也在该归档中。阅读当前代码时，应先从 `src/app/page.tsx`、`src/features/home/HomePage.tsx` 和 `src/features/workspace/WorkspaceRoute.tsx` 沿实际引用关系进入。
+| 要修改的内容 | 文件入口 |
+| --- | --- |
+| 首页布局、角色导航与页面状态 | `src/views/home/HomePage.tsx` |
+| 首页 SVG 镜头与动画 | `src/components/home/`，路径常量在 `src/data/graphics/` |
+| 登录弹层与演示身份 | `src/components/auth/LoginDialog.tsx`、`src/data/accounts.ts` |
+| 业务路由解析、角色访问拦截与页签 | `src/views/workspace/WorkspacePage.tsx` |
+| 通用表单与列表 | `src/components/workspace/ActionWorkspace.tsx` |
+| 学生报修、维修人员工单交互 | `src/components/workspace/RepairWorkspace.tsx`、`MaintenanceWorkspace.tsx` |
+| 角色菜单、功能及操作 ID | `src/data/role-features.ts` |
+| 通用模拟业务内容 | `src/data/module-content.ts` |
+| 演示会话存取 | `src/utils/demo-session.ts` |
+| 主题状态和主题选择控件 | `src/components/theme/ThemeProvider.tsx` |
+| 全局样式、类名合并工具 | `src/styles/globals.css`、`src/utils/class-names.ts` |
 
-仓库一级目录只保留应用源码、公共资源、当前文档、历史归档和构建工具要求的配置文件。`package.json`、锁文件、Next.js / TypeScript / ESLint 配置及 `AGENTS.md` 等需要留在仓库根目录，避免改变工具默认发现规则；`src/app/` 中的路由目录层级对应实际 URL，也不能为减少嵌套而随意压平。`src/components/ui/` 与 `src/lib/utils.ts` 保持现有位置，以兼容 `components.json` 的组件生成别名。
+`src/app/` 只承接路由、布局和框架约定资源，页面主体从 `views/` 导入。路由嵌套对应实际 URL，不为减少层级而压平。旧版 `RolePortal`、`ModulePage`、`ResidenceEngine` 等源码统一保存在 `archive/src/`，具体内容参见 [归档索引](archive/README.md)。
+
+命名与引用约定：React 页面和组件使用 PascalCase（例如 `WorkspacePage.tsx`）；普通数据、工具文件使用 kebab-case（例如 `demo-session.ts`）；组件和页面样式使用同名 `*.module.css` 并紧邻使用者，工作台共用样式为 `BusinessPanel.module.css`。Next.js 的 `page.tsx`、`layout.tsx` 等约定文件名保持不变。跨分类导入使用 `@/`，同目录引用使用相对路径；shadcn 的样式和工具别名在 `components.json` 中同步配置。只有实际出现相应代码时才新增 `api`、`services`、`hooks`、`types` 等目录。
+
+根目录的 `.ts`、`.json`、`.mjs` 是文件格式，不是统一的职责分类。`package.json`、锁文件及 Next.js、TypeScript、ESLint、PostCSS、shadcn 配置保留在根目录，遵循工具的常见发现方式；README、`.gitignore`、工具指令文件也保留在此处。自动生成的 `next-env.d.ts`、依赖、构建结果和本地 QA 产物由 `.gitignore` 排除。
+
+网站字体放在 `public/assets/fonts/`，以后实际使用的图片放在 `public/assets/images/`（当前不创建空目录）。favicon 依照 Next.js 图标约定留在 `src/app/`，TSX 中的 SVG 动画继续作为源码维护。历史参考图统一放在 `archive/assets/images/`，与网站公开资源分开。
 
 ## 已知边界与后续对接
 
 - **认证与授权：** 账号密码硬编码在前端，`sessionStorage` 只保存角色标识。正式系统需要后端认证、会话管理和服务端数据权限校验。
-- **业务数据：** 当前列表、指标和部分时间线由 `src/demo/module-content.ts`、`src/features/workspace/actions/ActionWorkspace.tsx` 及各业务组件内的固定数据提供；页面修改大多不会持久化。
+- **业务数据：** 当前列表、指标和部分时间线由 `src/data/module-content.ts`、`src/components/workspace/ActionWorkspace.tsx` 及各业务组件内的固定数据提供；页面修改大多不会持久化。
 - **状态流转：** 需统一住宿申请、床位、报修工单和账单的状态定义，并确定每个角色的可执行操作及操作后的数据变化。
 - **外部服务：** 在线缴费、消息催缴、批量导入、真实派工、备份恢复尚未接入相应服务。CSV 导出仅下载前端演示数据。
 - **生产启动配置：** `package.json` 中的 `start` 脚本与 `next.config.ts` 的 standalone 输出不一致，后续应统一部署方式并验证生产启动。
 - **测试与文档：** `archive/scripts/` 中的早期 QA 脚本含作者机器上的绝对 Playwright 路径与旧版页面选择器，已归档且不作为当前验收命令。`docs/qa/` 用于本地生成的截图和结果，已从 Git 跟踪中移除。当前版本尚缺可跨机器运行的完整业务验收测试，以及接口、字段、权限和状态流转文档。
 
-协作时，先以 `src/demo/role-features.ts` 作为当前菜单与路径的入口清单；修改功能 ID 或操作 ID 时同步检查详情页链接。新增业务数据和接口前，建议先约定各角色共用的记录 ID、状态、字段及更新规则，再逐条打通业务链路。提交前运行 `npm run check`；若改动了交互或样式，还需按实际入口在浏览器复核。
+协作时，先以 `src/data/role-features.ts` 作为当前菜单与路径的入口清单；修改功能 ID 或操作 ID 时同步检查详情页链接。新增业务数据和接口前，建议先约定各角色共用的记录 ID、状态、字段及更新规则，再逐条打通业务链路。提交前运行 `npm run check`；若改动了交互或样式，还需按实际入口在浏览器复核。

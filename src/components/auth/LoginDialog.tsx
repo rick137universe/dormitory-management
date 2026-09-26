@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { ArrowRight, Building2, ChevronRight, HardHat, KeyRound, ShieldCheck, UsersRound, X, type LucideIcon } from 'lucide-react';
-import { demoAccounts, type DemoAccount } from '@/demo/accounts';
+import { demoAccounts, type DemoAccount } from '@/data/accounts';
 import s from './LoginDialog.module.css';
 
 interface Props {

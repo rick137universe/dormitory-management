@@ -4,14 +4,14 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowDown, ArrowRight, LogOut, SunMoon } from 'lucide-react';
-import { LensExperience } from './LensExperience';
-import { LensBootIntro } from './LensBootIntro';
-import { LoginDialog } from '../auth/LoginDialog';
-import { readDemoSession, saveDemoSession } from '@/demo/session';
-import { roleFeatures, type RoleFeature } from '@/demo/role-features';
-import type { DemoAccount } from '@/demo/accounts';
+import { LensExperience } from '@/components/home/LensExperience';
+import { LensBootIntro } from '@/components/home/LensBootIntro';
+import { LoginDialog } from '@/components/auth/LoginDialog';
+import { readDemoSession, saveDemoSession } from '@/utils/demo-session';
+import { roleFeatures, type RoleFeature } from '@/data/role-features';
+import type { DemoAccount } from '@/data/accounts';
 import h from './HomePage.module.css';
-import { useTheme } from '@/providers/ThemeProvider';
+import { useTheme } from '@/components/theme/ThemeProvider';
 
 export function HomePage() {
   const router = useRouter();

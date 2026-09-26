@@ -4,18 +4,18 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, usePathname, useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Check, LogOut, ShieldAlert, X } from 'lucide-react';
-import { ActionWorkspace } from './actions/ActionWorkspace';
-import { MaintenanceWorkspace } from './actions/MaintenanceWorkspace';
-import { RepairWorkspace } from './actions/RepairWorkspace';
-import { readDemoSession, saveDemoSession } from '@/demo/session';
-import { featureFor, roleFeatures } from '@/demo/role-features';
-import { demoAccounts, type DemoAccount, type RoleId } from '@/demo/accounts';
-import s from './WorkspaceRoute.module.css';
-import { ThemeSelect } from '@/providers/ThemeProvider';
+import { ActionWorkspace } from '@/components/workspace/ActionWorkspace';
+import { MaintenanceWorkspace } from '@/components/workspace/MaintenanceWorkspace';
+import { RepairWorkspace } from '@/components/workspace/RepairWorkspace';
+import { readDemoSession, saveDemoSession } from '@/utils/demo-session';
+import { featureFor, roleFeatures } from '@/data/role-features';
+import { demoAccounts, type DemoAccount, type RoleId } from '@/data/accounts';
+import s from './WorkspacePage.module.css';
+import { ThemeSelect } from '@/components/theme/ThemeProvider';
 
 const validRoles: RoleId[] = ['student', 'dormManager', 'maintenance', 'admin'];
 
-export function WorkspaceRoute() {
+export function WorkspacePage() {
   const params = useParams<{ role: string; feature: string; action?: string[] }>();
   const pathname = usePathname();
   const router = useRouter();
