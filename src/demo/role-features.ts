@@ -1,4 +1,5 @@
-import type { ModuleId, RoleId } from './workspace-data';
+import type { RoleId } from './accounts';
+import type { ModuleId } from './module-content';
 
 export type MotionKind = 'campus' | 'identity' | 'rooms' | 'battery' | 'workflow' | 'broadcast' | 'data' | 'beds' | 'ledger' | 'record' | 'analytics' | 'rules' | 'dispatch' | 'orderRoute' | 'service' | 'permissions' | 'backup';
 

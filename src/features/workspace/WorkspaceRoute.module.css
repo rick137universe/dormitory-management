@@ -9,3 +9,6 @@
 .content{max-width:1200px}.actionTitle{padding:32px 28px 24px}.actionTitle h1{font-size:36px;letter-spacing:-1px;animation:none}.actionTitle p{margin-top:0}.actionTabs{padding:0 28px}.actionTabs button{height:48px;min-width:150px}.actionTitle span{font-size:13px}
 
 .topbarTools :global(.theme-options) button{font-size:11px;padding:7px 10px;color:var(--muted-ink)}.topbarTools :global(.theme-options) button[aria-pressed="true"],.topbarTools :global(.theme-options) button:hover{color:var(--control-ink)}@media(max-width:680px){.topbarTools :global(.theme-options) button{font-size:10px;padding:7px 5px}}
+
+.workspaceContent{padding:28px;overflow:auto}
+@media(max-width:680px){.workspaceContent{padding:18px 15px}}

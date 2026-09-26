@@ -91,19 +91,20 @@ src/
 ├─ app/                                             Next.js 路由、全局样式和图标
 │  └─ workspace/[role]/[feature]/[[...action]]/      业务详情路由
 ├─ features/
+│  ├─ auth/                                         当前使用的登录弹层及样式
+│  │  └─ LoginDialog.tsx
 │  ├─ home/                                         首页、角色导航与 SVG 镜头
 │  │  └─ HomePage.tsx
-│  └─ workspace/                                    登录、路由与业务详情外壳
-│     ├─ RolePortal.tsx                             登录弹窗及旧工作台展示
+│  └─ workspace/                                    路由与业务详情外壳
 │     ├─ WorkspaceRoute.tsx                         路由解析与演示角色拦截
-│     ├─ ModulePage.tsx                             通用模拟业务内容
 │     └─ actions/                                   各类操作页及共用样式
 │        ├─ ActionWorkspace.tsx                     通用表单与列表
 │        ├─ RepairWorkspace.tsx                     学生报修交互
 │        └─ MaintenanceWorkspace.tsx                维修人员工单交互
 ├─ demo/                                            前端演示数据与会话
+│  ├─ accounts.ts                                   演示账号和角色类型
 │  ├─ role-features.ts                              角色功能、操作 ID 和动画配置
-│  ├─ workspace-data.ts                             演示账号、指标与工作台数据
+│  ├─ module-content.ts                             业务页面使用的模拟内容
 │  └─ session.ts                                    演示身份的会话存取
 ├─ providers/ThemeProvider.tsx                      全局主题状态与控件
 ├─ components/ui/                                   可复用 UI 基础组件
@@ -113,14 +114,14 @@ docs/requirements-map.md                           需求与页面映射
 archive/                                           不参与当前构建的旧原型与脚本
 ```
 
-当前首页以 `RolePortal` 的登录模式使用弹窗；该组件中保留的旧版工作台页面不是当前登录后的主要操作入口。`ContinuousResidence.tsx`、`ResidenceEngine.tsx` 等旧版 3D 公寓组件已归入 `archive/ui/`。阅读当前代码时，应先从 `src/app/page.tsx`、`src/features/home/HomePage.tsx` 和 `src/features/workspace/WorkspaceRoute.tsx` 沿实际引用关系进入。
+首页调用 `src/features/auth/LoginDialog.tsx` 登录弹层；旧版 `RolePortal.tsx` 工作台、`ModulePage.tsx` 页面组件及其旧数据和样式已归入 `archive/ui/`，不参与当前构建。`ContinuousResidence.tsx`、`ResidenceEngine.tsx` 等旧版 3D 公寓组件也在该归档中。阅读当前代码时，应先从 `src/app/page.tsx`、`src/features/home/HomePage.tsx` 和 `src/features/workspace/WorkspaceRoute.tsx` 沿实际引用关系进入。
 
 仓库一级目录只保留应用源码、公共资源、当前文档、历史归档和构建工具要求的配置文件。`package.json`、锁文件、Next.js / TypeScript / ESLint 配置及 `AGENTS.md` 等需要留在仓库根目录，避免改变工具默认发现规则；`src/app/` 中的路由目录层级对应实际 URL，也不能为减少嵌套而随意压平。`src/components/ui/` 与 `src/lib/utils.ts` 保持现有位置，以兼容 `components.json` 的组件生成别名。
 
 ## 已知边界与后续对接
 
 - **认证与授权：** 账号密码硬编码在前端，`sessionStorage` 只保存角色标识。正式系统需要后端认证、会话管理和服务端数据权限校验。
-- **业务数据：** 当前列表、指标和部分时间线由 `src/demo/workspace-data.ts`、`ModulePage.tsx`、`ActionWorkspace.tsx` 及各业务组件内的固定数据提供；页面修改大多不会持久化。
+- **业务数据：** 当前列表、指标和部分时间线由 `src/demo/module-content.ts`、`src/features/workspace/actions/ActionWorkspace.tsx` 及各业务组件内的固定数据提供；页面修改大多不会持久化。
 - **状态流转：** 需统一住宿申请、床位、报修工单和账单的状态定义，并确定每个角色的可执行操作及操作后的数据变化。
 - **外部服务：** 在线缴费、消息催缴、批量导入、真实派工、备份恢复尚未接入相应服务。CSV 导出仅下载前端演示数据。
 - **生产启动配置：** `package.json` 中的 `start` 脚本与 `next.config.ts` 的 standalone 输出不一致，后续应统一部署方式并验证生产启动。

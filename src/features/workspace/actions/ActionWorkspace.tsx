@@ -1,8 +1,8 @@
 'use client';
 import { useState } from 'react';
 import type { RoleFeature } from '@/demo/role-features';
-import type { RoleId } from '@/demo/workspace-data';
-import { modulePage } from '../ModulePage';
+import type { RoleId } from '@/demo/accounts';
+import { getModuleContent } from '@/demo/module-content';
 import { ContentSwap } from './ContentSwap';
 import s from './BusinessPanel.module.css';
 
@@ -42,8 +42,8 @@ const lists: Record<string, Table> = {
 };
 export function ActionWorkspace({ feature, actionId, role }: { feature: RoleFeature; actionId: string; role: RoleId }) {
  const action = feature.actions.find(item => item.id === actionId) ?? feature.actions[0];
- const common = modulePage(feature.module, role, feature.id);
- const page = modulePage(feature.module, role, feature.id, actionId);
+ const common = getModuleContent(feature.module, role, feature.id);
+ const page = getModuleContent(feature.module, role, feature.id, actionId);
  const fields = forms[action.label];
  const [message, setMessage] = useState('');
  const [query, setQuery] = useState('');

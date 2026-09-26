@@ -9,8 +9,7 @@ import { MaintenanceWorkspace } from './actions/MaintenanceWorkspace';
 import { RepairWorkspace } from './actions/RepairWorkspace';
 import { readDemoSession, saveDemoSession } from '@/demo/session';
 import { featureFor, roleFeatures } from '@/demo/role-features';
-import { demoAccounts, type DemoAccount, type RoleId } from '@/demo/workspace-data';
-import portal from './RolePortal.module.css';
+import { demoAccounts, type DemoAccount, type RoleId } from '@/demo/accounts';
 import s from './WorkspaceRoute.module.css';
 import { ThemeSelect } from '@/providers/ThemeProvider';
 
@@ -84,7 +83,7 @@ export function WorkspaceRoute() {
           <span>{item.label}</span><ArrowRight size={14} />
         </button>)}
       </nav>
-      <div className={portal.workspaceContent}>
+      <div className={s.workspaceContent}>
         {role === 'maintenance' ? <MaintenanceWorkspace featureId={feature.id} actionId={action?.id ?? 'action-1'} /> : role === 'student' && feature.id === 'repair' ? <RepairWorkspace actionId={action?.id ?? 'action-1'} /> : <ActionWorkspace key={feature.id} feature={feature} actionId={action?.id ?? 'action-1'} role={account.role} />}
       </div>
     </main>

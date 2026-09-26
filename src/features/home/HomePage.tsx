@@ -6,10 +6,10 @@ import Link from 'next/link';
 import { ArrowDown, ArrowRight, LogOut, SunMoon } from 'lucide-react';
 import { LensExperience } from './LensExperience';
 import { LensBootIntro } from './LensBootIntro';
-import { RolePortal } from '../workspace/RolePortal';
+import { LoginDialog } from '../auth/LoginDialog';
 import { readDemoSession, saveDemoSession } from '@/demo/session';
 import { roleFeatures, type RoleFeature } from '@/demo/role-features';
-import type { DemoAccount } from '@/demo/workspace-data';
+import type { DemoAccount } from '@/demo/accounts';
 import h from './HomePage.module.css';
 import { useTheme } from '@/providers/ThemeProvider';
 
@@ -223,7 +223,7 @@ export function HomePage() {
 
     </div>
 
-    <RolePortal open={portalOpen} loginOnly requestedView="overview" onViewChange={() => undefined} onClose={() => setPortalOpen(false)} onSessionChange={onSessionChange} />
+    <LoginDialog open={portalOpen} onClose={() => setPortalOpen(false)} onSessionChange={onSessionChange} />
   </div>;
 }
 
